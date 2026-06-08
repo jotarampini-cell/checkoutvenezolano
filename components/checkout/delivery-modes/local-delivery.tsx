@@ -111,8 +111,9 @@ export function LocalDelivery({ onComplete }: LocalDeliveryProps) {
           </div>
 
           <button
+            id="submit-step-btn"
             onClick={handleConfirm}
-            className="btn-primary"
+            className="hidden lg:flex w-full justify-center items-center h-[52px] rounded-xl font-bold transition-all btn-primary"
           >
             Continuar con esta entrega
           </button>

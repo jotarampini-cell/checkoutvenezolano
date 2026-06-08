@@ -176,8 +176,9 @@ export function CustomerInfoForm({ onComplete, initialData }: CustomerInfoFormPr
       </div>
 
       <button
+        id="submit-step-btn"
         onClick={handleSubmit}
-        className="btn-primary"
+        className="hidden lg:flex w-full justify-center items-center h-[52px] rounded-xl font-bold transition-all btn-primary"
       >
         Continuar al Pago
       </button>

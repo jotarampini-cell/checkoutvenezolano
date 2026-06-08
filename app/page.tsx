@@ -350,9 +350,8 @@ export default function CheckoutPage() {
             </div>
             <button 
               onClick={() => {
-                // Determine next step based on the correct order
-                if (step === 'entrega') setStep('datos')
-                else if (step === 'datos') setStep('pago')
+                const btn = document.getElementById('submit-step-btn');
+                if (btn) btn.click();
               }}
               disabled={cartItems.length === 0 || step === 'pago'}
               className={cn("btn-primary py-2 px-5 text-sm rounded-lg w-auto", step === 'pago' ? "opacity-0 pointer-events-none" : "opacity-100")}
