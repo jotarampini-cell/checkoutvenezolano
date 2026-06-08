@@ -62,8 +62,8 @@
   --popover: oklch(100% 0 0);
   --popover-foreground: oklch(13% 0.01 260);
 
-  /* Primary — Monochrome Black */
-  --primary: oklch(15% 0 0);
+  /* Primary — Trust Blue (Stripe/PayPal aesthetic) */
+  --primary: oklch(48% 0.18 260);
   --primary-foreground: oklch(100% 0 0);
 
   /* Secondary — Warm neutral */
