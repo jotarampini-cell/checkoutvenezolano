@@ -26,6 +26,13 @@ const STEPS: { key: Step; label: string }[] = [
   { key: 'confirmacion', label: 'Listo' },
 ]
 
+// Mock de configuración de la tienda (esto vendría de una base de datos o API)
+const MERCHANT_CONFIG = {
+  // El merchant decide qué modalidades de entrega ofrece
+  // Puedes probar cambiando esto a ['local'] o ['national', 'pickup']
+  availableDeliveryModes: ['local', 'national', 'pickup'] as ('local' | 'national' | 'pickup')[],
+}
+
 export default function CheckoutPage() {
   const [step, setStep] = useState<Step>('entrega')
   const [deliveryData, setDeliveryData] = useState<any>(null)
