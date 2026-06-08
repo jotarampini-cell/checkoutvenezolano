@@ -1,7 +1,8 @@
 'use client'
 
 import { useState } from 'react'
-import { MapPin } from 'lucide-react'
+import { MapPin, CheckCircle2 } from 'lucide-react'
+import { cn } from '@/lib/utils'
 
 interface MapPickerProps {
   onSelect: (location: { lat: number; lng: number; address: string }) => void
@@ -9,6 +10,8 @@ interface MapPickerProps {
 
 export function MapPicker({ onSelect }: MapPickerProps) {
   const [address, setAddress] = useState('')
+  const [isDragging, setIsDragging] = useState(false)
+  const [dragComplete, setDragComplete] = useState(false)
 
   const handleConfirm = () => {
     if (!address) return
@@ -19,18 +22,38 @@ export function MapPicker({ onSelect }: MapPickerProps) {
     })
   }
 
+  const handleDragStart = () => {
+    setIsDragging(true)
+    setDragComplete(false)
+  }
+
+  const handleDragEnd = () => {
+    if (isDragging) {
+      setIsDragging(false)
+      setDragComplete(true)
+      setTimeout(() => setDragComplete(false), 3000)
+    }
+  }
+
   return (
     <div className="space-y-4">
-      <div className="relative h-[160px] sm:h-[200px] w-full overflow-hidden rounded-xl border border-border bg-muted/30">
-        <div className="absolute inset-0 bg-[url('https://api.mapbox.com/styles/v1/mapbox/light-v11/static/-66.86,10.48,12/600x400?access_token=pk.eyJ1IjoiZXhhbXBsZSIsImEiOiJja2V4YW1wbGUifQ.example')] bg-cover bg-center opacity-40 mix-blend-luminosity" />
+      <div 
+        className={cn("relative h-[160px] sm:h-[200px] w-full overflow-hidden rounded-xl border border-border bg-muted/30 touch-none cursor-grab active:cursor-grabbing transition-shadow", isDragging && "ring-2 ring-primary/50 shadow-lg")}
+        onPointerDown={handleDragStart}
+        onPointerUp={handleDragEnd}
+        onPointerLeave={handleDragEnd}
+      >
+        <div className={cn("absolute inset-0 bg-[url('https://api.mapbox.com/styles/v1/mapbox/light-v11/static/-66.86,10.48,12/600x400?access_token=pk.eyJ1IjoiZXhhbXBsZSIsImEiOiJja2V4YW1wbGUifQ.example')] bg-cover bg-center mix-blend-luminosity transition-opacity", isDragging ? "opacity-60" : "opacity-40")} />
         <div className="absolute inset-0 bg-background/20 backdrop-blur-[2px]" />
         
         <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-          <div className="animate-bounce-subtle flex h-10 w-10 items-center justify-center rounded-full bg-primary/20 backdrop-blur-md shadow-glow">
-            <MapPin className="h-5 w-5 text-primary" />
+          <div className={cn("transition-all duration-300 flex h-10 w-10 items-center justify-center rounded-full backdrop-blur-md shadow-glow", 
+            isDragging ? "-translate-y-4 scale-110 bg-primary text-primary-foreground shadow-xl" : "bg-primary/20 text-primary"
+          )}>
+            <MapPin className="h-5 w-5" />
           </div>
-          <div className="mt-2 rounded-full bg-background/80 px-3 py-1 text-[10px] font-medium text-foreground backdrop-blur-md shadow-sm border border-border">
-            Mapa de referencia
+          <div className="mt-2 rounded-full bg-background/80 px-3 py-1 text-[10px] font-medium text-foreground backdrop-blur-md shadow-sm border border-border transition-all">
+            {isDragging ? 'Moviendo mapa...' : dragComplete ? <span className="flex items-center gap-1 text-success"><CheckCircle2 className="h-3 w-3"/> Ubicación fijada</span> : 'Mueve el mapa para fijar'}
           </div>
         </div>
       </div>

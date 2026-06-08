@@ -1,16 +1,46 @@
 'use client'
 
 import { CheckCircle2, MessageCircle, Copy } from 'lucide-react'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import confetti from 'canvas-confetti'
 
 interface ConfirmationModalProps {
   orderData: any
   confirmationNumber: string
+  totalFormatted: string
   onNewOrder: () => void
 }
 
-export function ConfirmationModal({ orderData, confirmationNumber, onNewOrder }: ConfirmationModalProps) {
+export function ConfirmationModal({ orderData, confirmationNumber, totalFormatted, onNewOrder }: ConfirmationModalProps) {
   const [copied, setCopied] = useState(false)
+
+  useEffect(() => {
+    // Fire confetti on mount
+    const duration = 3 * 1000
+    const end = Date.now() + duration
+
+    const frame = () => {
+      confetti({
+        particleCount: 5,
+        angle: 60,
+        spread: 55,
+        origin: { x: 0 },
+        colors: ['#2563eb', '#16a34a', '#fbbf24']
+      })
+      confetti({
+        particleCount: 5,
+        angle: 120,
+        spread: 55,
+        origin: { x: 1 },
+        colors: ['#2563eb', '#16a34a', '#fbbf24']
+      })
+
+      if (Date.now() < end) {
+        requestAnimationFrame(frame)
+      }
+    }
+    frame()
+  }, [])
 
   const handleCopy = () => {
     navigator.clipboard.writeText(confirmationNumber)
@@ -19,7 +49,8 @@ export function ConfirmationModal({ orderData, confirmationNumber, onNewOrder }:
   }
 
   const handleWhatsApp = () => {
-    window.open(`https://wa.me/584141234567?text=Hola,%20acabo%20de%20realizar%20un%20pedido.%20Referencia:%20${confirmationNumber}`, '_blank')
+    const text = `¡Hola! Acabo de realizar un pedido.%0A%0A*Ref:* ${confirmationNumber}%0A*Total:* ${totalFormatted}%0A*Método:* ${(orderData?.method || 'Pago Móvil').replace('-', ' ')}%0A%0A¡Ya realicé el pago, espero confirmación!`
+    window.open(`https://wa.me/584141234567?text=${text}`, '_blank')
   }
 
   return (
@@ -62,7 +93,7 @@ export function ConfirmationModal({ orderData, confirmationNumber, onNewOrder }:
           </div>
           <div className="flex justify-between text-sm">
             <span className="text-muted-foreground">Total pagado</span>
-            <span className="font-bold text-primary">$1.55M</span>
+            <span className="font-bold text-primary">{totalFormatted}</span>
           </div>
         </div>
       </div>

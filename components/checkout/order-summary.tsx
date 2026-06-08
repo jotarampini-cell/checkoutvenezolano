@@ -2,6 +2,7 @@
 
 import { ShoppingBag, Tag } from 'lucide-react'
 import { CartItemList, CartItem } from './cart-item-list'
+import { cn } from '@/lib/utils'
 
 interface OrderSummaryProps {
   orderData: any
@@ -9,6 +10,8 @@ interface OrderSummaryProps {
   cartItems: CartItem[]
   onUpdateQuantity: (id: string, delta: number) => void
   onRemoveItem: (id: string) => void
+  currency?: 'USD' | 'VES'
+  onCurrencyChange?: (c: 'USD' | 'VES') => void
 }
 
 export function OrderSummary({ 
@@ -16,19 +19,31 @@ export function OrderSummary({
   currentStep, 
   cartItems, 
   onUpdateQuantity, 
-  onRemoveItem 
+  onRemoveItem,
+  currency = 'USD',
+  onCurrencyChange
 }: OrderSummaryProps) {
+  const EXCHANGE_RATE = 567.68
   const subtotal = cartItems.reduce((acc, item) => acc + (item.price * item.quantity), 0)
   const shippingCost = orderData?.shippingCost || 0
   const total = subtotal + shippingCost
 
-  const formatPrice = (amount: number) => {
+  const formatPrice = (amountInUsd: number) => {
+    if (currency === 'VES') {
+      const amountInVes = amountInUsd * EXCHANGE_RATE
+      return new Intl.NumberFormat('es-VE', {
+        style: 'currency',
+        currency: 'VES',
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+      }).format(amountInVes)
+    }
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
       currency: 'USD',
       minimumFractionDigits: 0,
       maximumFractionDigits: 2
-    }).format(amount)
+    }).format(amountInUsd)
   }
 
   return (
@@ -43,7 +58,22 @@ export function OrderSummary({
         </div>
       </div>
 
-      <div className="p-6">
+      <div className="bg-muted/50 p-2 mx-6 mt-4 rounded-lg flex items-center justify-between">
+        <button 
+          onClick={() => onCurrencyChange?.('USD')}
+          className={cn("flex-1 text-xs font-bold py-1.5 rounded-md transition-colors", currency === 'USD' ? "bg-background shadow-sm text-foreground" : "text-muted-foreground hover:text-foreground")}
+        >
+          USD $
+        </button>
+        <button 
+          onClick={() => onCurrencyChange?.('VES')}
+          className={cn("flex-1 text-xs font-bold py-1.5 rounded-md transition-colors", currency === 'VES' ? "bg-background shadow-sm text-foreground" : "text-muted-foreground hover:text-foreground")}
+        >
+          VES Bs
+        </button>
+      </div>
+
+      <div className="p-6 pt-4">
         {/* Products */}
         <CartItemList 
           items={cartItems} 

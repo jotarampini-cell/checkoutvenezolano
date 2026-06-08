@@ -6,20 +6,25 @@ import { cn } from '@/lib/utils'
 interface PagoMetodoScreenProps {
   onSelect: (method: string) => void
   selected?: string | null
+  currency?: 'USD' | 'VES'
 }
 
 const PAYMENT_METHODS = [
-  { id: 'pago-movil', name: 'Pago Móvil', description: 'Banco a banco por teléfono', icon: Smartphone },
-  { id: 'transferencia', name: 'Transferencia bancaria', description: 'A cuenta corriente o de ahorro', icon: Building2 },
-  { id: 'zelle', name: 'Zelle', description: 'Transferencia en dólares', icon: DollarSign },
-  { id: 'divisas', name: 'Divisas en efectivo', description: 'Entrega de USD/EUR al recibir', icon: Banknote },
+  { id: 'pago-movil', name: 'Pago Móvil', description: 'Banco a banco por teléfono', icon: Smartphone, currency: 'VES' },
+  { id: 'transferencia', name: 'Transferencia bancaria', description: 'A cuenta corriente o de ahorro', icon: Building2, currency: 'both' },
+  { id: 'zelle', name: 'Zelle', description: 'Transferencia en dólares', icon: DollarSign, currency: 'USD' },
+  { id: 'divisas', name: 'Divisas en efectivo', description: 'Entrega de USD/EUR al recibir', icon: Banknote, currency: 'USD' },
 ]
 
-export function PagoMetodoScreen({ onSelect, selected }: PagoMetodoScreenProps) {
+export function PagoMetodoScreen({ onSelect, selected, currency = 'USD' }: PagoMetodoScreenProps) {
+  const availableMethods = PAYMENT_METHODS.filter(
+    m => m.currency === 'both' || m.currency === currency || (!m.currency)
+  )
+
   return (
     <div className="space-y-4">
       <div className="grid gap-3 sm:grid-cols-2">
-        {PAYMENT_METHODS.map((method) => {
+        {availableMethods.map((method) => {
           const Icon = method.icon
           const isSelected = selected === method.id
 

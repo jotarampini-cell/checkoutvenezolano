@@ -9,9 +9,10 @@ import { PagoEsperaScreen } from './pago-espera-screen'
 interface CheckoutPaymentFlowProps {
   onComplete: (paymentData: any) => void
   onBack?: () => void
+  currency?: 'USD' | 'VES'
 }
 
-export function CheckoutPaymentFlow({ onComplete }: CheckoutPaymentFlowProps) {
+export function CheckoutPaymentFlow({ onComplete, currency = 'USD' }: CheckoutPaymentFlowProps) {
   const [selectedMethod, setSelectedMethod] = useState<string | null>(null)
   const [showReportForm, setShowReportForm] = useState(false)
   const [isVerifying, setIsVerifying] = useState(false)
@@ -35,6 +36,7 @@ export function CheckoutPaymentFlow({ onComplete }: CheckoutPaymentFlowProps) {
           setShowReportForm(true)
         }} 
         selected={selectedMethod} 
+        currency={currency}
       />
 
       {selectedMethod && showReportForm && (

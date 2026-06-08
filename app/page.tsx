@@ -19,6 +19,9 @@ const STEPS: { key: Step; label: string }[] = [
   { key: 'confirmacion', label: 'Listo' },
 ]
 
+export const EXCHANGE_RATE = 567.68
+export type Currency = 'USD' | 'VES'
+
 export default function CheckoutPage() {
   const [step, setStep] = useState<Step>('entrega')
   const [deliveryData, setDeliveryData] = useState<any>(null)
@@ -27,6 +30,9 @@ export default function CheckoutPage() {
   const [confirmationNumber, setConfirmationNumber] = useState<string | null>(null)
   const [summaryExpanded, setSummaryExpanded] = useState(false)
   const [scrolled, setScrolled] = useState(false)
+  
+  // Global currency state
+  const [currency, setCurrency] = useState<Currency>('USD')
 
   // Cart state
   const [cartItems, setCartItems] = useState<CartItem[]>(INITIAL_CART)
@@ -64,14 +70,24 @@ export default function CheckoutPage() {
   const shippingCost = deliveryData?.shippingCost || 0
   const total = subtotal + shippingCost
 
-  const formatPrice = (amount: number) => {
+  const formatPrice = useCallback((amountInUsd: number) => {
+    if (currency === 'VES') {
+      const amountInVes = amountInUsd * EXCHANGE_RATE
+      return new Intl.NumberFormat('es-VE', {
+        style: 'currency',
+        currency: 'VES',
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+      }).format(amountInVes)
+    }
+
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
       currency: 'USD',
       minimumFractionDigits: 0,
       maximumFractionDigits: 2
-    }).format(amount)
-  }
+    }).format(amountInUsd)
+  }, [currency])
 
   // Step handlers
   const handleDeliveryComplete = useCallback((data: any) => {
@@ -145,6 +161,22 @@ export default function CheckoutPage() {
             {summaryExpanded && (
               <div className="mt-4 animate-fade-down lg:hidden">
                 <div className="rounded-xl bg-card border border-border p-4 shadow-lg space-y-4">
+                  {/* Currency Toggle Mobile */}
+                  <div className="flex items-center justify-between bg-muted/50 p-1 rounded-lg">
+                    <button 
+                      onClick={() => setCurrency('USD')}
+                      className={cn("flex-1 text-xs font-bold py-1.5 rounded-md transition-colors", currency === 'USD' ? "bg-background shadow-sm text-foreground" : "text-muted-foreground")}
+                    >
+                      USD $
+                    </button>
+                    <button 
+                      onClick={() => setCurrency('VES')}
+                      className={cn("flex-1 text-xs font-bold py-1.5 rounded-md transition-colors", currency === 'VES' ? "bg-background shadow-sm text-foreground" : "text-muted-foreground")}
+                    >
+                      VES Bs
+                    </button>
+                  </div>
+
                   {/* Products List */}
                   <CartItemList 
                     items={cartItems} 
@@ -254,8 +286,12 @@ export default function CheckoutPage() {
             )}
 
             <div className={cn("step-content pb-28 lg:pb-8", cartItems.length === 0 && "opacity-40 pointer-events-none grayscale-[0.5]")}>
-              {step === 'entrega' && (
-                <CheckoutFlow onComplete={handleDeliveryComplete} />
+              {step === 'pago' && (
+                <CheckoutPaymentFlow 
+                  onComplete={handlePaymentComplete} 
+                  onBack={() => setStep('datos')} 
+                  currency={currency}
+                />
               )}
               {step === 'datos' && (
                 <ProfileSelection
@@ -263,16 +299,14 @@ export default function CheckoutPage() {
                   onBack={handleBack}
                 />
               )}
-              {step === 'pago' && (
-                <CheckoutPaymentFlow
-                  onComplete={handlePaymentComplete}
-                  onBack={handleBack}
-                />
+              {step === 'entrega' && (
+                <CheckoutFlow onComplete={handleDeliveryComplete} />
               )}
               {step === 'confirmacion' && confirmationNumber && (
                 <ConfirmationModal
                   orderData={orderData}
                   confirmationNumber={confirmationNumber}
+                  totalFormatted={formatPrice(total)}
                   onNewOrder={handleReset}
                 />
               )}
@@ -292,28 +326,32 @@ export default function CheckoutPage() {
                 cartItems={cartItems}
                 onUpdateQuantity={handleUpdateQuantity}
                 onRemoveItem={handleRemoveItem}
+                currency={currency}
+                onCurrencyChange={setCurrency}
               />
             </div>
           )}
         </div>
       </main>
-
-      {/* ========== STICKY CTA BOTTOM (mobile only) ========== */}
+      {/* Floating Bottom Bar for Mobile */}
       {step !== 'confirmacion' && (
-        <div className="sticky-cta">
-          <div className="mx-auto max-w-xl flex items-center gap-3">
-            <div className="flex items-center gap-1.5 text-xs text-muted-foreground flex-shrink-0">
-              <Lock className="h-3.5 w-3.5" />
-              <span>Seguro</span>
+        <div className="fixed bottom-0 left-0 right-0 p-4 bg-background/80 backdrop-blur-md border-t border-border lg:hidden z-40 animate-fade-up">
+          <div className="flex items-center justify-between max-w-lg mx-auto">
+            <div>
+              <p className="text-xs text-muted-foreground font-medium">Total a pagar</p>
+              <p className="text-lg font-bold text-foreground">{formatPrice(total)}</p>
             </div>
-            <div className="flex-1 text-right">
-              <div className="text-[10px] text-muted-foreground uppercase tracking-wider font-medium">
-                Total
-              </div>
-              <div className="text-base font-bold text-foreground leading-tight">
-                {formatPrice(total)}
-              </div>
-            </div>
+            <button 
+              onClick={() => {
+                // Determine next step based on the correct order
+                if (step === 'entrega') setStep('datos')
+                else if (step === 'datos') setStep('pago')
+              }}
+              disabled={cartItems.length === 0 || step === 'pago'}
+              className={cn("btn-primary py-2.5 px-6 rounded-xl w-auto", step === 'pago' ? "opacity-0 pointer-events-none" : "opacity-100")}
+            >
+              Continuar
+            </button>
           </div>
         </div>
       )}
