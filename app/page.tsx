@@ -65,9 +65,12 @@ export default function CheckoutPage() {
   const total = subtotal + shippingCost
 
   const formatPrice = (amount: number) => {
-    if (amount >= 1000000) return `$${(amount / 1000000).toFixed(1)}M`
-    if (amount >= 1000) return `$${(amount / 1000).toFixed(0)}k`
-    return `$${amount}`
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 2
+    }).format(amount)
   }
 
   // Step handlers

@@ -14,7 +14,7 @@ export const INITIAL_CART: CartItem[] = [
   {
     id: '1',
     name: 'Zapatos Deportivos',
-    price: 300000,
+    price: 50,
     quantity: 2,
     emoji: '👟',
     details: 'Talla 42 • Color Negro'
@@ -22,7 +22,7 @@ export const INITIAL_CART: CartItem[] = [
   {
     id: '2',
     name: 'Franela Básica',
-    price: 900000,
+    price: 30,
     quantity: 1,
     emoji: '👕',
     details: 'Talla M • Color Blanco'
