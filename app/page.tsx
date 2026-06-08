@@ -6,16 +6,9 @@ import { ProfileSelection } from '@/components/checkout/profile-selection'
 import { OrderSummary } from '@/components/checkout/order-summary'
 import { ConfirmationModal } from '@/components/checkout/confirmation-modal'
 import { CheckoutPaymentFlow } from '@/components/checkout/payment/checkout-payment-flow'
-import {
-  ShoppingBag,
-  ChevronDown,
-  ChevronUp,
-  Check,
-  ArrowLeft,
-  Shield,
-  Lock,
-} from 'lucide-react'
+import { ShoppingBag, ChevronDown, ChevronUp, Check, ArrowLeft, Shield, Lock } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { CartItemList, CartItem, INITIAL_CART } from '@/components/checkout/cart-item-list'
 
 type Step = 'entrega' | 'datos' | 'pago' | 'confirmacion'
 
@@ -26,13 +19,6 @@ const STEPS: { key: Step; label: string }[] = [
   { key: 'confirmacion', label: 'Listo' },
 ]
 
-// Mock de configuración de la tienda (esto vendría de una base de datos o API)
-const MERCHANT_CONFIG = {
-  // El merchant decide qué modalidades de entrega ofrece
-  // Puedes probar cambiando esto a ['local'] o ['national', 'pickup']
-  availableDeliveryModes: ['local', 'national', 'pickup'] as ('local' | 'national' | 'pickup')[],
-}
-
 export default function CheckoutPage() {
   const [step, setStep] = useState<Step>('entrega')
   const [deliveryData, setDeliveryData] = useState<any>(null)
@@ -41,6 +27,9 @@ export default function CheckoutPage() {
   const [confirmationNumber, setConfirmationNumber] = useState<string | null>(null)
   const [summaryExpanded, setSummaryExpanded] = useState(false)
   const [scrolled, setScrolled] = useState(false)
+
+  // Cart state
+  const [cartItems, setCartItems] = useState<CartItem[]>(INITIAL_CART)
 
   // Track scroll for header shadow
   useEffect(() => {
@@ -56,8 +45,22 @@ export default function CheckoutPage() {
 
   const currentStepIndex = STEPS.findIndex((s) => s.key === step)
 
+  const handleUpdateQuantity = useCallback((id: string, delta: number) => {
+    setCartItems(prev => prev.map(item => {
+      if (item.id === id) {
+        const newQ = Math.max(0, item.quantity + delta)
+        return { ...item, quantity: newQ }
+      }
+      return item
+    }).filter(item => item.quantity > 0))
+  }, [])
+
+  const handleRemoveItem = useCallback((id: string) => {
+    setCartItems(prev => prev.filter(item => item.id !== id))
+  }, [])
+
   // Calculate subtotal and total
-  const subtotal = 1500000
+  const subtotal = cartItems.reduce((acc, item) => acc + (item.price * item.quantity), 0)
   const shippingCost = deliveryData?.shippingCost || 0
   const total = subtotal + shippingCost
 
@@ -140,33 +143,12 @@ export default function CheckoutPage() {
               <div className="mt-4 animate-fade-down lg:hidden">
                 <div className="rounded-xl bg-card border border-border p-4 shadow-lg space-y-4">
                   {/* Products List */}
-                  <div className="space-y-3">
-                    <div className="flex gap-3 items-center">
-                      <div className="h-12 w-12 rounded-lg bg-muted border border-border flex items-center justify-center shrink-0">
-                        <span className="text-xl opacity-50">👟</span>
-                      </div>
-                      <div className="flex-1">
-                        <div className="flex justify-between items-start">
-                          <p className="text-sm font-bold text-foreground">Zapatos Deportivos</p>
-                          <p className="text-sm font-bold">{formatPrice(600000)}</p>
-                        </div>
-                        <p className="text-[11px] text-muted-foreground">Talla 42 • Color Negro • Cant: 2</p>
-                      </div>
-                    </div>
-
-                    <div className="flex gap-3 items-center">
-                      <div className="h-12 w-12 rounded-lg bg-muted border border-border flex items-center justify-center shrink-0">
-                        <span className="text-xl opacity-50">👕</span>
-                      </div>
-                      <div className="flex-1">
-                        <div className="flex justify-between items-start">
-                          <p className="text-sm font-bold text-foreground">Franela Básica</p>
-                          <p className="text-sm font-bold">{formatPrice(900000)}</p>
-                        </div>
-                        <p className="text-[11px] text-muted-foreground">Talla M • Color Blanco • Cant: 1</p>
-                      </div>
-                    </div>
-                  </div>
+                  <CartItemList 
+                    items={cartItems} 
+                    onUpdateQuantity={handleUpdateQuantity} 
+                    onRemoveItem={handleRemoveItem} 
+                    formatPrice={formatPrice}
+                  />
 
                   <div className="divider !my-2" />
 
@@ -174,7 +156,7 @@ export default function CheckoutPage() {
                   <div className="space-y-2">
                     <div className="flex justify-between text-sm">
                       <span className="text-muted-foreground">Subtotal</span>
-                      <span className="font-medium">{formatPrice(1500000)}</span>
+                      <span className="font-medium">{formatPrice(subtotal)}</span>
                     </div>
                     {shippingCost > 0 ? (
                       <div className="flex justify-between text-sm">
@@ -291,6 +273,9 @@ export default function CheckoutPage() {
                   shippingCost,
                 }}
                 currentStep={step}
+                cartItems={cartItems}
+                onUpdateQuantity={handleUpdateQuantity}
+                onRemoveItem={handleRemoveItem}
               />
             </div>
           )}

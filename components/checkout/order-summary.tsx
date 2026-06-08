@@ -1,14 +1,24 @@
 'use client'
 
-import { ShoppingBag, Tag } from 'lucide-react'
+import { ShoppingBag } from 'lucide-react'
+import { CartItemList, CartItem } from './cart-item-list'
 
 interface OrderSummaryProps {
   orderData: any
   currentStep: string
+  cartItems: CartItem[]
+  onUpdateQuantity: (id: string, delta: number) => void
+  onRemoveItem: (id: string) => void
 }
 
-export function OrderSummary({ orderData, currentStep }: OrderSummaryProps) {
-  const subtotal = 1500000
+export function OrderSummary({ 
+  orderData, 
+  currentStep, 
+  cartItems, 
+  onUpdateQuantity, 
+  onRemoveItem 
+}: OrderSummaryProps) {
+  const subtotal = cartItems.reduce((acc, item) => acc + (item.price * item.quantity), 0)
   const shippingCost = orderData?.shippingCost || 0
   const total = subtotal + shippingCost
 
@@ -32,36 +42,13 @@ export function OrderSummary({ orderData, currentStep }: OrderSummaryProps) {
 
       <div className="p-6">
         {/* Products */}
-        <div className="space-y-4">
-          <div className="flex gap-4">
-            <div className="h-16 w-16 rounded-xl bg-muted border border-border flex items-center justify-center overflow-hidden shrink-0">
-              <span className="text-2xl opacity-50">👟</span>
-            </div>
-            <div className="flex-1">
-              <div className="flex justify-between items-start">
-                <p className="text-sm font-bold text-foreground">Zapatos Deportivos</p>
-                <p className="text-sm font-bold">{formatPrice(600000)}</p>
-              </div>
-              <p className="text-xs text-muted-foreground mt-0.5">Talla 42 • Color Negro</p>
-              <p className="text-[10px] font-bold mt-1 bg-secondary inline-block px-2 py-0.5 rounded-md">Cant: 2</p>
-            </div>
-          </div>
-
-          <div className="flex gap-4">
-            <div className="h-16 w-16 rounded-xl bg-muted border border-border flex items-center justify-center overflow-hidden shrink-0">
-              <span className="text-2xl opacity-50">👕</span>
-            </div>
-            <div className="flex-1">
-              <div className="flex justify-between items-start">
-                <p className="text-sm font-bold text-foreground">Franela Básica</p>
-                <p className="text-sm font-bold">{formatPrice(900000)}</p>
-              </div>
-              <p className="text-xs text-muted-foreground mt-0.5">Talla M • Color Blanco</p>
-              <p className="text-[10px] font-bold mt-1 bg-secondary inline-block px-2 py-0.5 rounded-md">Cant: 1</p>
-            </div>
-          </div>
-        </div>
-
+        <CartItemList 
+          items={cartItems} 
+          onUpdateQuantity={onUpdateQuantity} 
+          onRemoveItem={onRemoveItem} 
+          formatPrice={formatPrice}
+        />
+        
         <div className="divider my-6" />
 
         {/* Promo Code */}
