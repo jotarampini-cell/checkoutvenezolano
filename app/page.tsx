@@ -335,6 +335,10 @@ export default function CheckoutPage() {
                 onRemoveItem={handleRemoveItem}
                 currency={currency}
                 onCurrencyChange={setCurrency}
+                subtotal={subtotal}
+                shippingCost={shippingCost}
+                total={total}
+                showContinueButton={step !== 'pago' && cartItems.length > 0}
               />
             </div>
           )}

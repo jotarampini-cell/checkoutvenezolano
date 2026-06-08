@@ -5,28 +5,33 @@ import { CartItemList, CartItem } from './cart-item-list'
 import { cn } from '@/lib/utils'
 
 interface OrderSummaryProps {
-  orderData: any
-  currentStep: string
   cartItems: CartItem[]
+  subtotal: number
+  shippingCost: number | null
+  total: number
+  orderData: any
+  currency: 'USD' | 'VES'
+  onCurrencyChange?: (currency: 'USD' | 'VES') => void
+  showContinueButton?: boolean
+  currentStep: string
   onUpdateQuantity: (id: string, delta: number) => void
   onRemoveItem: (id: string) => void
-  currency?: 'USD' | 'VES'
-  onCurrencyChange?: (c: 'USD' | 'VES') => void
 }
 
 export function OrderSummary({ 
-  orderData, 
-  currentStep, 
   cartItems, 
-  onUpdateQuantity, 
-  onRemoveItem,
-  currency = 'USD',
-  onCurrencyChange
+  subtotal, 
+  shippingCost, 
+  total, 
+  orderData,
+  currency,
+  onCurrencyChange,
+  showContinueButton = false,
+  currentStep,
+  onUpdateQuantity,
+  onRemoveItem
 }: OrderSummaryProps) {
   const EXCHANGE_RATE = 567.68
-  const subtotal = cartItems.reduce((acc, item) => acc + (item.price * item.quantity), 0)
-  const shippingCost = orderData?.shippingCost || 0
-  const total = subtotal + shippingCost
 
   const formatPrice = (amountInUsd: number) => {
     if (currency === 'VES') {
@@ -109,7 +114,7 @@ export function OrderSummary({
         <div className="divider my-6" />
 
         {/* Totals */}
-        <div className="space-y-3">
+        <div className="space-y-4 bg-muted/30 p-4 rounded-xl border border-border">
           <div className="flex justify-between text-sm">
             <span className="text-muted-foreground">Subtotal</span>
             <span className="font-medium text-foreground">{formatPrice(subtotal)}</span>
@@ -141,6 +146,19 @@ export function OrderSummary({
             </div>
           </div>
         </div>
+        
+        {/* Desktop Master Continue Button */}
+        {showContinueButton && (
+          <button 
+            onClick={() => {
+              const btn = document.getElementById('submit-step-btn');
+              if (btn) btn.click();
+            }}
+            className="hidden lg:flex w-full btn-primary justify-center items-center h-[52px] rounded-xl font-bold transition-all mt-6 shadow-md hover:shadow-lg"
+          >
+            Continuar
+          </button>
+        )}
       </div>
     </div>
   )
