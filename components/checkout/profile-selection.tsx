@@ -46,7 +46,19 @@ export function ProfileSelection({ onComplete }: ProfileSelectionProps) {
     // Simulate API delay
     await new Promise(r => setTimeout(r, 1000))
     
-    const profile = getProfileByPhone(verifyPhone)
+    let profile = getProfileByPhone(verifyPhone)
+    
+    // Bypass for testing
+    if (verifyCode === '1234') {
+      profile = {
+        name: 'Usuario Verificado',
+        idType: 'V',
+        idNumber: '12345678',
+        phone: verifyPhone || '04141234567',
+        email: 'usuario@prueba.com'
+      }
+    }
+
     if (profile) {
       setPrefilledData(profile)
       setShowVerificationModal(false)
