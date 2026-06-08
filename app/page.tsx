@@ -105,31 +105,25 @@ export default function CheckoutPage() {
 
   return (
     <div className="min-h-dvh bg-background">
-      {/* ========== STICKY HEADER ========== */}
+      {/* ========== SIMPLE STICKY HEADER ========== */}
       {step !== 'confirmacion' && (
         <header className={cn('checkout-header', scrolled && 'scrolled')}>
-          <div className="mx-auto max-w-6xl px-4 py-3">
-            {/* Top row: Logo + Total */}
+          <div className="mx-auto max-w-6xl px-4 py-3 sm:py-4">
             <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2.5">
-                <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/10">
-                  <ShoppingBag className="h-[18px] w-[18px] text-primary" />
-                </div>
-                <span className="text-[15px] font-bold text-foreground tracking-tight">
-                  Checkout
-                </span>
-              </div>
+              <h1 className="text-xl font-bold text-foreground tracking-tight">
+                Checkout
+              </h1>
 
-              {/* Collapsible total */}
+              {/* Collapsible total (Mobile only) */}
               <button
                 onClick={() => setSummaryExpanded(!summaryExpanded)}
-                className="flex items-center gap-2 rounded-xl bg-secondary/80 px-3.5 py-2 transition-all hover:bg-secondary"
+                className="flex lg:hidden items-center gap-2 rounded-lg bg-muted/50 px-3 py-1.5 transition-all hover:bg-muted"
               >
                 <div className="text-right">
-                  <div className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">
+                  <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
                     Total
                   </div>
-                  <div className="text-sm font-bold text-foreground">
+                  <div className="text-sm font-bold text-foreground leading-none mt-0.5">
                     {formatPrice(total)}
                   </div>
                 </div>
@@ -143,78 +137,45 @@ export default function CheckoutPage() {
 
             {/* Expanded summary (mobile) */}
             {summaryExpanded && (
-              <div className="mt-3 animate-fade-down lg:hidden">
-                <div className="rounded-xl bg-secondary/60 p-3 space-y-2">
+              <div className="mt-4 animate-fade-down lg:hidden">
+                <div className="rounded-xl bg-muted/30 border border-border p-4 space-y-3">
                   <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">Producto 1 × 2</span>
-                    <span className="font-medium">{formatPrice(600000)}</span>
-                  </div>
-                  <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">Producto 2 × 1</span>
-                    <span className="font-medium">{formatPrice(900000)}</span>
+                    <span className="text-muted-foreground">Productos</span>
+                    <span className="font-bold">{formatPrice(1500000)}</span>
                   </div>
                   {shippingCost > 0 && (
                     <div className="flex justify-between text-sm">
                       <span className="text-muted-foreground">Envío</span>
-                      <span className="font-medium">{formatPrice(shippingCost)}</span>
+                      <span className="font-bold">{formatPrice(shippingCost)}</span>
                     </div>
                   )}
-                  <div className="divider" />
-                  <div className="flex justify-between text-sm font-bold">
-                    <span>Total</span>
-                    <span className="text-primary">{formatPrice(total)}</span>
+                  <div className="divider !my-3" />
+                  <div className="flex justify-between text-base font-bold">
+                    <span>Total a pagar</span>
+                    <span className="text-foreground">{formatPrice(total)}</span>
                   </div>
                 </div>
               </div>
             )}
-
-            {/* Progress bar */}
-            <div className="mt-4 mb-1">
-              <div className="progress-bar">
-                {/* Background line */}
-                {/* Active line */}
-                <div
-                  className="progress-line"
-                  style={{
-                    width:
-                      currentStepIndex === 0
-                        ? '0%'
-                        : currentStepIndex === 1
-                          ? '33%'
-                          : currentStepIndex === 2
-                            ? '66%'
-                            : '100%',
-                  }}
-                />
-
-                {STEPS.map((s, i) => (
-                  <div key={s.key} className="progress-step">
-                    <div
-                      className={cn(
-                        'progress-dot',
-                        i < currentStepIndex && 'completed',
-                        i === currentStepIndex && 'active',
-                        i > currentStepIndex && 'pending'
-                      )}
-                    >
-                      {i < currentStepIndex ? (
-                        <Check className="h-4 w-4" />
-                      ) : (
-                        <span>{i + 1}</span>
-                      )}
-                    </div>
-                    <span
-                      className={cn(
-                        'progress-label',
-                        i < currentStepIndex && 'completed',
-                        i === currentStepIndex && 'active'
-                      )}
-                    >
-                      {s.label}
-                    </span>
-                  </div>
-                ))}
-              </div>
+            
+            {/* Minimalist Progress Indicator */}
+            <div className="mt-4 flex items-center gap-2">
+              {STEPS.map((s, i) => (
+                <div key={s.key} className="flex-1 flex flex-col gap-1.5">
+                  <div 
+                    className={cn(
+                      "h-1.5 w-full rounded-full transition-colors",
+                      i <= currentStepIndex ? "bg-foreground" : "bg-muted"
+                    )}
+                  />
+                  <span className={cn(
+                    "text-[10px] font-bold uppercase tracking-wider",
+                    i <= currentStepIndex ? "text-foreground" : "text-muted-foreground"
+                  )}>
+                    {s.label}
+                  </span>
+                </div>
+              ))}
             </div>
           </div>
         </header>

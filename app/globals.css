@@ -62,9 +62,9 @@
   --popover: oklch(100% 0 0);
   --popover-foreground: oklch(13% 0.01 260);
 
-  /* Primary — Refined teal */
-  --primary: oklch(42% 0.1 175);
-  --primary-foreground: oklch(99% 0.005 175);
+  /* Primary — Monochrome Black */
+  --primary: oklch(15% 0 0);
+  --primary-foreground: oklch(100% 0 0);
 
   /* Secondary — Warm neutral */
   --secondary: oklch(95.5% 0.005 70);
@@ -84,14 +84,14 @@
   /* Borders & inputs */
   --border: oklch(91% 0.005 70);
   --input: oklch(91% 0.005 70);
-  --ring: oklch(42% 0.1 175);
+  --ring: var(--primary);
 
   /* Success */
   --success: oklch(55% 0.17 155);
   --success-light: oklch(95% 0.03 155);
 
   /* Charts */
-  --chart-1: oklch(42% 0.1 175);
+  --chart-1: var(--primary);
   --chart-2: oklch(60% 0.12 175);
   --chart-3: oklch(75% 0.14 80);
   --chart-4: oklch(55% 0.15 25);
@@ -100,12 +100,12 @@
   /* Sidebar */
   --sidebar: oklch(97% 0.004 70);
   --sidebar-foreground: oklch(13% 0.01 260);
-  --sidebar-primary: oklch(42% 0.1 175);
+  --sidebar-primary: var(--primary);
   --sidebar-primary-foreground: oklch(99% 0.005 175);
   --sidebar-accent: oklch(95% 0.005 70);
   --sidebar-accent-foreground: oklch(25% 0.01 260);
   --sidebar-border: oklch(91% 0.005 70);
-  --sidebar-ring: oklch(42% 0.1 175);
+  --sidebar-ring: var(--primary);
 
   /* Premium shadows */
   --shadow-xs: 0 1px 2px oklch(0% 0 0 / 0.03);
@@ -113,7 +113,7 @@
   --shadow-md: 0 4px 6px oklch(0% 0 0 / 0.04), 0 2px 4px oklch(0% 0 0 / 0.03);
   --shadow-lg: 0 10px 25px oklch(0% 0 0 / 0.06), 0 4px 10px oklch(0% 0 0 / 0.03);
   --shadow-xl: 0 20px 40px oklch(0% 0 0 / 0.08), 0 8px 16px oklch(0% 0 0 / 0.04);
-  --shadow-glow: 0 0 20px oklch(42% 0.1 175 / 0.15);
+  --shadow-glow: 0 0 20px oklch(15% 0 0 / 0.15);
   --shadow-card: 0 1px 3px oklch(0% 0 0 / 0.03), 0 4px 12px oklch(0% 0 0 / 0.04);
   --shadow-card-hover: 0 2px 8px oklch(0% 0 0 / 0.05), 0 8px 24px oklch(0% 0 0 / 0.07);
 }
@@ -209,8 +209,8 @@ body {
 }
 
 @keyframes dot-pulse {
-  0%, 100% { transform: scale(1); box-shadow: 0 0 0 0 oklch(42% 0.1 175 / 0.4); }
-  50% { transform: scale(1.05); box-shadow: 0 0 0 6px oklch(42% 0.1 175 / 0); }
+  0%, 100% { transform: scale(1); box-shadow: 0 0 0 0 oklch(15% 0 0 / 0.4); }
+  50% { transform: scale(1.05); box-shadow: 0 0 0 6px oklch(15% 0 0 / 0); }
 }
 
 @keyframes success-bg {
@@ -281,7 +281,7 @@ body {
 .card-interactive.selected {
   border-color: var(--primary);
   background: oklch(97% 0.015 175);
-  box-shadow: 0 0 0 3px oklch(42% 0.1 175 / 0.1), var(--shadow-md);
+  box-shadow: 0 0 0 3px oklch(15% 0 0 / 0.1), var(--shadow-md);
 }
 
 /* ============================================
@@ -314,7 +314,7 @@ body {
 .input-premium:focus {
   outline: none;
   border-color: var(--primary);
-  box-shadow: 0 0 0 3px oklch(42% 0.1 175 / 0.1), var(--shadow-sm);
+  box-shadow: 0 0 0 3px oklch(15% 0 0 / 0.1), var(--shadow-sm);
 }
 
 .input-premium.error {
@@ -383,7 +383,7 @@ body {
 .select-premium:focus {
   outline: none;
   border-color: var(--primary);
-  box-shadow: 0 0 0 3px oklch(42% 0.1 175 / 0.1), var(--shadow-sm);
+  box-shadow: 0 0 0 3px oklch(15% 0 0 / 0.1), var(--shadow-sm);
 }
 
 /* ============================================
@@ -401,10 +401,10 @@ body {
   font-weight: 600;
   letter-spacing: 0.01em;
   color: var(--primary-foreground);
-  background: linear-gradient(135deg, oklch(42% 0.1 175), oklch(38% 0.11 180));
+  background: linear-gradient(135deg, var(--primary), oklch(38% 0.11 180));
   border: none;
   border-radius: var(--radius-xl);
-  box-shadow: 0 2px 8px oklch(42% 0.1 175 / 0.25), var(--shadow-sm);
+  box-shadow: 0 2px 8px oklch(15% 0 0 / 0.25), var(--shadow-sm);
   cursor: pointer;
   transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
   position: relative;
@@ -425,13 +425,13 @@ body {
 }
 
 .btn-primary:hover {
-  box-shadow: 0 4px 16px oklch(42% 0.1 175 / 0.3), var(--shadow-md);
+  box-shadow: 0 4px 16px oklch(15% 0 0 / 0.3), var(--shadow-md);
   transform: translateY(-1px);
 }
 
 .btn-primary:active {
   transform: translateY(0) scale(0.98);
-  box-shadow: 0 1px 4px oklch(42% 0.1 175 / 0.2);
+  box-shadow: 0 1px 4px oklch(15% 0 0 / 0.2);
 }
 
 .btn-primary:disabled {
@@ -557,7 +557,7 @@ body {
   background: var(--primary);
   border: 2px solid var(--primary);
   color: var(--primary-foreground);
-  box-shadow: 0 0 0 4px oklch(42% 0.1 175 / 0.12), var(--shadow-md);
+  box-shadow: 0 0 0 4px oklch(15% 0 0 / 0.12), var(--shadow-md);
 }
 
 .progress-dot.completed {

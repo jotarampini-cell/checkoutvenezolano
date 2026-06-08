@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { LocalDelivery } from './delivery-modes/local-delivery'
 import { NationalShipping } from './delivery-modes/national-shipping'
 import { PickupDelivery } from './delivery-modes/pickup-delivery'
-import { Truck, Package, Store } from 'lucide-react'
+import { Truck, Package, Store, ArrowLeft } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 export type DeliveryMode = 'local' | 'national' | 'pickup'
@@ -15,7 +15,10 @@ interface CheckoutFlowProps {
 }
 
 export function CheckoutFlow({ onComplete, availableModes = ['local', 'national', 'pickup'] }: CheckoutFlowProps) {
-  // If there's only one available mode, pre-select it
+  // Step 1: select mode, Step 2: fill form
+  const [internalStep, setInternalStep] = useState<'select' | 'form'>(
+    availableModes.length === 1 ? 'form' : 'select'
+  )
   const [selectedMode, setSelectedMode] = useState<DeliveryMode | null>(
     availableModes.length === 1 ? availableModes[0] : null
   )
@@ -23,158 +26,107 @@ export function CheckoutFlow({ onComplete, availableModes = ['local', 'national'
   useEffect(() => {
     if (availableModes.length === 1 && selectedMode !== availableModes[0]) {
       setSelectedMode(availableModes[0])
+      setInternalStep('form')
     }
   }, [availableModes, selectedMode])
 
-  const hasLocal = availableModes.includes('local')
-  const hasNational = availableModes.includes('national')
-  const hasPickup = availableModes.includes('pickup')
+  const handleSelectMode = (mode: DeliveryMode) => {
+    setSelectedMode(mode)
+    setInternalStep('form')
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+  }
 
+  const handleBackToModes = () => {
+    setInternalStep('select')
+    setSelectedMode(null)
+  }
+
+  if (internalStep === 'form' && selectedMode) {
+    return (
+      <div className="animate-fade-in">
+        {/* Only show back button if there are other options to go back to */}
+        {availableModes.length > 1 && (
+          <button onClick={handleBackToModes} className="btn-ghost mb-4 -ml-2">
+            <ArrowLeft className="h-4 w-4" />
+            <span>Cambiar método de entrega</span>
+          </button>
+        )}
+
+        <div className="card-premium p-4 sm:p-6 mb-6 bg-muted/10">
+          <div className="flex items-center gap-3">
+            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10 text-primary shrink-0">
+              {selectedMode === 'local' && <Truck className="h-6 w-6" />}
+              {selectedMode === 'national' && <Package className="h-6 w-6" />}
+              {selectedMode === 'pickup' && <Store className="h-6 w-6" />}
+            </div>
+            <div>
+              <h3 className="text-base font-bold text-foreground">
+                {selectedMode === 'local' && 'Delivery Local'}
+                {selectedMode === 'national' && 'Envío Nacional'}
+                {selectedMode === 'pickup' && 'Retiro en Tienda'}
+              </h3>
+              <p className="text-sm text-muted-foreground mt-0.5">
+                {selectedMode === 'local' && 'Completa los detalles de tu entrega'}
+                {selectedMode === 'national' && 'Completa los detalles de tu envío'}
+                {selectedMode === 'pickup' && 'Selecciona la sede de retiro'}
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div className="animate-fade-up">
+          {selectedMode === 'local' && <LocalDelivery onComplete={onComplete} />}
+          {selectedMode === 'national' && <NationalShipping onComplete={onComplete} />}
+          {selectedMode === 'pickup' && <PickupDelivery onComplete={onComplete} />}
+        </div>
+      </div>
+    )
+  }
+
+  // Selection Screen
   return (
-    <div className="space-y-4">
-      {/* Local Delivery Card */}
-      {hasLocal && (
-        <div className={cn(
-          'card-interactive overflow-hidden',
-          selectedMode === 'local' && 'selected',
-          availableModes.length === 1 && '!cursor-default'
-        )}>
-          {availableModes.length > 1 && (
-            <div 
-              className="flex items-center gap-4 p-4 sm:p-5"
-              onClick={() => setSelectedMode(selectedMode === 'local' ? null : 'local')}
-            >
-              <div className={cn("radio-indicator", selectedMode === 'local' && "selected")}>
-                 <div className="radio-dot" />
-              </div>
-              <div className="flex h-10 w-10 sm:h-12 sm:w-12 items-center justify-center rounded-xl bg-primary/10 text-primary shrink-0">
-                <Truck className="h-5 w-5 sm:h-6 sm:w-6" />
-              </div>
-              <div className="flex-1">
-                <h3 className="text-sm sm:text-base font-bold text-foreground">Delivery Local</h3>
-                <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">Entrega a domicilio en tu zona</p>
-              </div>
-            </div>
-          )}
-          
-          <div 
-            className={cn("accordion-content", availableModes.length === 1 ? "!opacity-100 !max-h-none" : "")}
-            data-state={selectedMode === 'local' ? 'open' : 'closed'}
-          >
-            <div className={cn("px-4 sm:px-5 pb-4 sm:pb-5", availableModes.length > 1 ? "pt-0 border-t border-border mt-1" : "pt-4 sm:pt-5")}>
-              {availableModes.length === 1 && (
-                <div className="flex items-center gap-3 mb-6">
-                  <div className="flex h-10 w-10 sm:h-12 sm:w-12 items-center justify-center rounded-xl bg-primary/10 text-primary shrink-0">
-                    <Truck className="h-5 w-5 sm:h-6 sm:w-6" />
-                  </div>
-                  <div>
-                    <h3 className="text-sm sm:text-base font-bold text-foreground">Delivery Local</h3>
-                    <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">Completa los detalles de tu entrega</p>
-                  </div>
-                </div>
-              )}
-              <div className={availableModes.length > 1 ? "pt-4" : ""}>
-                <LocalDelivery onComplete={onComplete} />
-              </div>
-            </div>
+    <div className="space-y-4 animate-fade-in">
+      {availableModes.includes('local') && (
+        <div 
+          className="card-interactive p-4 sm:p-5 flex items-center gap-4"
+          onClick={() => handleSelectMode('local')}
+        >
+          <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10 text-primary shrink-0">
+            <Truck className="h-6 w-6" />
+          </div>
+          <div className="flex-1">
+            <h3 className="text-base font-bold text-foreground">Delivery Local</h3>
+            <p className="text-sm text-muted-foreground mt-0.5">Entrega a domicilio en tu zona</p>
           </div>
         </div>
       )}
 
-      {/* National Shipping Card */}
-      {hasNational && (
-        <div className={cn(
-          'card-interactive overflow-hidden',
-          selectedMode === 'national' && 'selected',
-          availableModes.length === 1 && '!cursor-default'
-        )}>
-          {availableModes.length > 1 && (
-            <div 
-              className="flex items-center gap-4 p-4 sm:p-5"
-              onClick={() => setSelectedMode(selectedMode === 'national' ? null : 'national')}
-            >
-              <div className={cn("radio-indicator", selectedMode === 'national' && "selected")}>
-                 <div className="radio-dot" />
-              </div>
-              <div className="flex h-10 w-10 sm:h-12 sm:w-12 items-center justify-center rounded-xl bg-primary/10 text-primary shrink-0">
-                <Package className="h-5 w-5 sm:h-6 sm:w-6" />
-              </div>
-              <div className="flex-1">
-                <h3 className="text-sm sm:text-base font-bold text-foreground">Envío Nacional</h3>
-                <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">A través de transportista en todo el país</p>
-              </div>
-            </div>
-          )}
-          
-          <div 
-            className={cn("accordion-content", availableModes.length === 1 ? "!opacity-100 !max-h-none" : "")}
-            data-state={selectedMode === 'national' ? 'open' : 'closed'}
-          >
-            <div className={cn("px-4 sm:px-5 pb-4 sm:pb-5", availableModes.length > 1 ? "pt-0 border-t border-border mt-1" : "pt-4 sm:pt-5")}>
-              {availableModes.length === 1 && (
-                <div className="flex items-center gap-3 mb-6">
-                  <div className="flex h-10 w-10 sm:h-12 sm:w-12 items-center justify-center rounded-xl bg-primary/10 text-primary shrink-0">
-                    <Package className="h-5 w-5 sm:h-6 sm:w-6" />
-                  </div>
-                  <div>
-                    <h3 className="text-sm sm:text-base font-bold text-foreground">Envío Nacional</h3>
-                    <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">Completa los detalles de tu envío</p>
-                  </div>
-                </div>
-              )}
-              <div className={availableModes.length > 1 ? "pt-4" : ""}>
-                <NationalShipping onComplete={onComplete} />
-              </div>
-            </div>
+      {availableModes.includes('national') && (
+        <div 
+          className="card-interactive p-4 sm:p-5 flex items-center gap-4"
+          onClick={() => handleSelectMode('national')}
+        >
+          <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10 text-primary shrink-0">
+            <Package className="h-6 w-6" />
+          </div>
+          <div className="flex-1">
+            <h3 className="text-base font-bold text-foreground">Envío Nacional</h3>
+            <p className="text-sm text-muted-foreground mt-0.5">A través de transportista en todo el país</p>
           </div>
         </div>
       )}
 
-      {/* Pickup Delivery Card */}
-      {hasPickup && (
-        <div className={cn(
-          'card-interactive overflow-hidden',
-          selectedMode === 'pickup' && 'selected',
-          availableModes.length === 1 && '!cursor-default'
-        )}>
-          {availableModes.length > 1 && (
-            <div 
-              className="flex items-center gap-4 p-4 sm:p-5"
-              onClick={() => setSelectedMode(selectedMode === 'pickup' ? null : 'pickup')}
-            >
-              <div className={cn("radio-indicator", selectedMode === 'pickup' && "selected")}>
-                 <div className="radio-dot" />
-              </div>
-              <div className="flex h-10 w-10 sm:h-12 sm:w-12 items-center justify-center rounded-xl bg-primary/10 text-primary shrink-0">
-                <Store className="h-5 w-5 sm:h-6 sm:w-6" />
-              </div>
-              <div className="flex-1">
-                <h3 className="text-sm sm:text-base font-bold text-foreground">Retiro en Tienda</h3>
-                <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">Recoge tu pedido en nuestras sedes</p>
-              </div>
-            </div>
-          )}
-          
-          <div 
-            className={cn("accordion-content", availableModes.length === 1 ? "!opacity-100 !max-h-none" : "")}
-            data-state={selectedMode === 'pickup' ? 'open' : 'closed'}
-          >
-            <div className={cn("px-4 sm:px-5 pb-4 sm:pb-5", availableModes.length > 1 ? "pt-0 border-t border-border mt-1" : "pt-4 sm:pt-5")}>
-              {availableModes.length === 1 && (
-                <div className="flex items-center gap-3 mb-6">
-                  <div className="flex h-10 w-10 sm:h-12 sm:w-12 items-center justify-center rounded-xl bg-primary/10 text-primary shrink-0">
-                    <Store className="h-5 w-5 sm:h-6 sm:w-6" />
-                  </div>
-                  <div>
-                    <h3 className="text-sm sm:text-base font-bold text-foreground">Retiro en Tienda</h3>
-                    <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">Selecciona la sede de retiro</p>
-                  </div>
-                </div>
-              )}
-              <div className={availableModes.length > 1 ? "pt-4" : ""}>
-                <PickupDelivery onComplete={onComplete} />
-              </div>
-            </div>
+      {availableModes.includes('pickup') && (
+        <div 
+          className="card-interactive p-4 sm:p-5 flex items-center gap-4"
+          onClick={() => handleSelectMode('pickup')}
+        >
+          <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10 text-primary shrink-0">
+            <Store className="h-6 w-6" />
+          </div>
+          <div className="flex-1">
+            <h3 className="text-base font-bold text-foreground">Retiro en Tienda</h3>
+            <p className="text-sm text-muted-foreground mt-0.5">Recoge tu pedido en nuestras sedes</p>
           </div>
         </div>
       )}
