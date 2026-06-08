@@ -138,21 +138,59 @@ export default function CheckoutPage() {
             {/* Expanded summary (mobile) */}
             {summaryExpanded && (
               <div className="mt-4 animate-fade-down lg:hidden">
-                <div className="rounded-xl bg-muted/30 border border-border p-4 space-y-3">
-                  <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">Productos</span>
-                    <span className="font-bold">{formatPrice(1500000)}</span>
-                  </div>
-                  {shippingCost > 0 && (
-                    <div className="flex justify-between text-sm">
-                      <span className="text-muted-foreground">Envío</span>
-                      <span className="font-bold">{formatPrice(shippingCost)}</span>
+                <div className="rounded-xl bg-card border border-border p-4 shadow-lg space-y-4">
+                  {/* Products List */}
+                  <div className="space-y-3">
+                    <div className="flex gap-3 items-center">
+                      <div className="h-12 w-12 rounded-lg bg-muted border border-border flex items-center justify-center shrink-0">
+                        <span className="text-xl opacity-50">👟</span>
+                      </div>
+                      <div className="flex-1">
+                        <div className="flex justify-between items-start">
+                          <p className="text-sm font-bold text-foreground">Zapatos Deportivos</p>
+                          <p className="text-sm font-bold">{formatPrice(600000)}</p>
+                        </div>
+                        <p className="text-[11px] text-muted-foreground">Talla 42 • Color Negro • Cant: 2</p>
+                      </div>
                     </div>
-                  )}
-                  <div className="divider !my-3" />
-                  <div className="flex justify-between text-base font-bold">
-                    <span>Total a pagar</span>
-                    <span className="text-foreground">{formatPrice(total)}</span>
+
+                    <div className="flex gap-3 items-center">
+                      <div className="h-12 w-12 rounded-lg bg-muted border border-border flex items-center justify-center shrink-0">
+                        <span className="text-xl opacity-50">👕</span>
+                      </div>
+                      <div className="flex-1">
+                        <div className="flex justify-between items-start">
+                          <p className="text-sm font-bold text-foreground">Franela Básica</p>
+                          <p className="text-sm font-bold">{formatPrice(900000)}</p>
+                        </div>
+                        <p className="text-[11px] text-muted-foreground">Talla M • Color Blanco • Cant: 1</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="divider !my-2" />
+
+                  {/* Totals */}
+                  <div className="space-y-2">
+                    <div className="flex justify-between text-sm">
+                      <span className="text-muted-foreground">Subtotal</span>
+                      <span className="font-medium">{formatPrice(1500000)}</span>
+                    </div>
+                    {shippingCost > 0 ? (
+                      <div className="flex justify-between text-sm">
+                        <span className="text-muted-foreground">Envío</span>
+                        <span className="font-medium">{formatPrice(shippingCost)}</span>
+                      </div>
+                    ) : (
+                      <div className="flex justify-between text-sm">
+                        <span className="text-muted-foreground">Envío</span>
+                        <span className="text-xs font-medium text-muted-foreground">Por calcular</span>
+                      </div>
+                    )}
+                    <div className="flex justify-between text-base font-bold pt-2 border-t border-border mt-2">
+                      <span>Total a pagar</span>
+                      <span className="text-foreground">{formatPrice(total)}</span>
+                    </div>
                   </div>
                 </div>
               </div>
