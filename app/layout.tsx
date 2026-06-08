@@ -1,19 +1,17 @@
-import { Analytics } from '@vercel/analytics/next'
 import type { Metadata } from 'next'
 import { Plus_Jakarta_Sans } from 'next/font/google'
 import './globals.css'
 
 const jakarta = Plus_Jakarta_Sans({
   subsets: ['latin'],
-  weight: ['400', '500', '600', '700'],
+  weight: ['400', '500', '600', '700', '800'],
   variable: '--font-sans',
   display: 'swap',
 })
 
 export const metadata: Metadata = {
-  title: 'Checkout Venezolano',
-  description: 'Completa tu pedido de forma segura y rápida',
-  generator: 'v0.app',
+  title: 'Checkout — Completa tu pedido',
+  description: 'Completa tu pedido de forma segura y rápida. Pago Móvil, Zelle, Transferencia bancaria.',
   icons: {
     icon: [
       {
@@ -42,7 +40,6 @@ export default function RootLayout({
     <html lang="es" className={jakarta.variable}>
       <body className="font-sans antialiased">
         {children}
-        {process.env.NODE_ENV === 'production' && <Analytics />}
       </body>
     </html>
   )

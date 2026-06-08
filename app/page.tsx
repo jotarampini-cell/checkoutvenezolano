@@ -1,163 +1,315 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { CheckoutFlow } from '@/components/checkout/checkout-flow'
+import { ProfileSelection } from '@/components/checkout/profile-selection'
 import { OrderSummary } from '@/components/checkout/order-summary'
 import { ConfirmationModal } from '@/components/checkout/confirmation-modal'
 import { CheckoutPaymentFlow } from '@/components/checkout/payment/checkout-payment-flow'
+import {
+  ShoppingBag,
+  ChevronDown,
+  ChevronUp,
+  Check,
+  ArrowLeft,
+  Shield,
+  Lock,
+} from 'lucide-react'
+import { cn } from '@/lib/utils'
+
+type Step = 'entrega' | 'datos' | 'pago' | 'confirmacion'
+
+const STEPS: { key: Step; label: string }[] = [
+  { key: 'entrega', label: 'Entrega' },
+  { key: 'datos', label: 'Datos' },
+  { key: 'pago', label: 'Pago' },
+  { key: 'confirmacion', label: 'Listo' },
+]
 
 export default function CheckoutPage() {
-  const [step, setStep] = useState<'delivery-mode' | 'delivery-details' | 'payment' | 'confirmation'>('delivery-mode')
-  const [deliveryMode, setDeliveryMode] = useState<'local' | 'national' | 'pickup' | null>(null)
+  const [step, setStep] = useState<Step>('entrega')
+  const [deliveryData, setDeliveryData] = useState<any>(null)
+  const [customerInfo, setCustomerInfo] = useState<any>(null)
   const [orderData, setOrderData] = useState<any>(null)
   const [confirmationNumber, setConfirmationNumber] = useState<string | null>(null)
+  const [summaryExpanded, setSummaryExpanded] = useState(false)
+  const [scrolled, setScrolled] = useState(false)
 
-  const handleModeSelect = (mode: 'local' | 'national' | 'pickup') => {
-    setDeliveryMode(mode)
-    setStep('delivery-details')
+  // Track scroll for header shadow
+  useEffect(() => {
+    const handleScroll = () => setScrolled(window.scrollY > 8)
+    window.addEventListener('scroll', handleScroll, { passive: true })
+    return () => window.removeEventListener('scroll', handleScroll)
+  }, [])
+
+  // Scroll to top on step change
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+  }, [step])
+
+  const currentStepIndex = STEPS.findIndex((s) => s.key === step)
+
+  // Calculate subtotal and total
+  const subtotal = 1500000
+  const shippingCost = deliveryData?.shippingCost || 0
+  const total = subtotal + shippingCost
+
+  const formatPrice = (amount: number) => {
+    if (amount >= 1000000) return `$${(amount / 1000000).toFixed(1)}M`
+    if (amount >= 1000) return `$${(amount / 1000).toFixed(0)}k`
+    return `$${amount}`
   }
 
-  const handleDeliveryDetailsComplete = (data: any) => {
-    setOrderData(data)
-    setStep('payment')
-  }
+  // Step handlers
+  const handleDeliveryComplete = useCallback((data: any) => {
+    setDeliveryData(data)
+    setStep('datos')
+  }, [])
 
-  const handlePaymentComplete = (paymentData: any) => {
-    // Generate confirmation number
+  const handleCustomerInfoComplete = useCallback((info: any) => {
+    setCustomerInfo(info)
+    setStep('pago')
+  }, [])
+
+  const handlePaymentComplete = useCallback((paymentData: any) => {
     const confirmNum = 'VE' + Date.now().toString().slice(-8)
     setConfirmationNumber(confirmNum)
-    setOrderData({ ...orderData, ...paymentData, confirmationNumber: confirmNum })
-    setStep('confirmation')
-  }
+    setOrderData({
+      ...deliveryData,
+      customerInfo,
+      ...paymentData,
+      confirmationNumber: confirmNum,
+    })
+    setStep('confirmacion')
+  }, [deliveryData, customerInfo])
 
-  const handleReset = () => {
-    setStep('delivery-mode')
-    setDeliveryMode(null)
+  const handleReset = useCallback(() => {
+    setStep('entrega')
+    setDeliveryData(null)
+    setCustomerInfo(null)
     setOrderData(null)
     setConfirmationNumber(null)
-  }
+  }, [])
+
+  const handleBack = useCallback(() => {
+    if (step === 'datos') setStep('entrega')
+    else if (step === 'pago') setStep('datos')
+  }, [step])
 
   return (
-    <div className="min-h-screen bg-background">
-      <div className="mx-auto max-w-7xl px-3 py-4 sm:px-4 sm:py-8">
-        {/* Header */}
-        <div className="mb-6 border-b border-border pb-4 sm:mb-8 sm:pb-6">
-          <h1 className="text-2xl font-bold text-foreground sm:text-3xl">Checkout Venezolano</h1>
-          <p className="mt-1 text-sm text-muted-foreground sm:mt-2">Completa tu pedido de forma segura y rápida</p>
-        </div>
+    <div className="min-h-dvh bg-background">
+      {/* ========== STICKY HEADER ========== */}
+      {step !== 'confirmacion' && (
+        <header className={cn('checkout-header', scrolled && 'scrolled')}>
+          <div className="mx-auto max-w-6xl px-4 py-3">
+            {/* Top row: Logo + Total */}
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2.5">
+                <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/10">
+                  <ShoppingBag className="h-[18px] w-[18px] text-primary" />
+                </div>
+                <span className="text-[15px] font-bold text-foreground tracking-tight">
+                  Checkout
+                </span>
+              </div>
 
-        {/* Main Content */}
-        <div className="grid gap-4 sm:gap-8 lg:grid-cols-3">
-          {/* Checkout Flow */}
-          <div className="lg:col-span-2">
-            {step === 'delivery-mode' && (
-              <DeliveryModeSelector onModeSelect={handleModeSelect} />
+              {/* Collapsible total */}
+              <button
+                onClick={() => setSummaryExpanded(!summaryExpanded)}
+                className="flex items-center gap-2 rounded-xl bg-secondary/80 px-3.5 py-2 transition-all hover:bg-secondary"
+              >
+                <div className="text-right">
+                  <div className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">
+                    Total
+                  </div>
+                  <div className="text-sm font-bold text-foreground">
+                    {formatPrice(total)}
+                  </div>
+                </div>
+                {summaryExpanded ? (
+                  <ChevronUp className="h-4 w-4 text-muted-foreground" />
+                ) : (
+                  <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                )}
+              </button>
+            </div>
+
+            {/* Expanded summary (mobile) */}
+            {summaryExpanded && (
+              <div className="mt-3 animate-fade-down lg:hidden">
+                <div className="rounded-xl bg-secondary/60 p-3 space-y-2">
+                  <div className="flex justify-between text-sm">
+                    <span className="text-muted-foreground">Producto 1 × 2</span>
+                    <span className="font-medium">{formatPrice(600000)}</span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-muted-foreground">Producto 2 × 1</span>
+                    <span className="font-medium">{formatPrice(900000)}</span>
+                  </div>
+                  {shippingCost > 0 && (
+                    <div className="flex justify-between text-sm">
+                      <span className="text-muted-foreground">Envío</span>
+                      <span className="font-medium">{formatPrice(shippingCost)}</span>
+                    </div>
+                  )}
+                  <div className="divider" />
+                  <div className="flex justify-between text-sm font-bold">
+                    <span>Total</span>
+                    <span className="text-primary">{formatPrice(total)}</span>
+                  </div>
+                </div>
+              </div>
             )}
-            {step === 'delivery-details' && deliveryMode && (
-              <CheckoutFlow
-                mode={deliveryMode}
-                onComplete={handleDeliveryDetailsComplete}
-                onBack={() => setStep('delivery-mode')}
-              />
+
+            {/* Progress bar */}
+            <div className="mt-4 mb-1">
+              <div className="progress-bar">
+                {/* Background line */}
+                {/* Active line */}
+                <div
+                  className="progress-line"
+                  style={{
+                    width:
+                      currentStepIndex === 0
+                        ? '0%'
+                        : currentStepIndex === 1
+                          ? '33%'
+                          : currentStepIndex === 2
+                            ? '66%'
+                            : '100%',
+                  }}
+                />
+
+                {STEPS.map((s, i) => (
+                  <div key={s.key} className="progress-step">
+                    <div
+                      className={cn(
+                        'progress-dot',
+                        i < currentStepIndex && 'completed',
+                        i === currentStepIndex && 'active',
+                        i > currentStepIndex && 'pending'
+                      )}
+                    >
+                      {i < currentStepIndex ? (
+                        <Check className="h-4 w-4" />
+                      ) : (
+                        <span>{i + 1}</span>
+                      )}
+                    </div>
+                    <span
+                      className={cn(
+                        'progress-label',
+                        i < currentStepIndex && 'completed',
+                        i === currentStepIndex && 'active'
+                      )}
+                    >
+                      {s.label}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </header>
+      )}
+
+      {/* ========== MAIN CONTENT ========== */}
+      <main className="mx-auto max-w-6xl px-4 py-6 lg:py-8">
+        <div className={cn(
+          'grid gap-6 lg:gap-8',
+          step !== 'confirmacion' ? 'lg:grid-cols-[1fr_340px]' : ''
+        )}>
+          {/* Checkout flow area */}
+          <div className={cn(
+            'mx-auto w-full',
+            step !== 'confirmacion' ? 'max-w-xl' : 'max-w-lg'
+          )}>
+            {/* Back button */}
+            {step !== 'entrega' && step !== 'confirmacion' && (
+              <button onClick={handleBack} className="btn-ghost mb-4 -ml-2 animate-fade-in">
+                <ArrowLeft className="h-4 w-4" />
+                <span>Atrás</span>
+              </button>
             )}
-            {step === 'payment' && (
-              <CheckoutPaymentFlow
-                onComplete={handlePaymentComplete}
-                onBack={() => setStep('delivery-details')}
-              />
+
+            {/* Step title */}
+            {step !== 'confirmacion' && (
+              <div className="mb-6 step-enter">
+                <h1 className="text-2xl font-bold text-foreground tracking-tight">
+                  {step === 'entrega' && '¿Cómo recibes tu pedido?'}
+                  {step === 'datos' && 'Tus datos'}
+                  {step === 'pago' && 'Método de pago'}
+                </h1>
+                <p className="mt-1.5 text-sm text-muted-foreground">
+                  {step === 'entrega' && 'Elige la modalidad y completa los detalles de entrega'}
+                  {step === 'datos' && 'Completa tu información para continuar'}
+                  {step === 'pago' && 'Selecciona cómo deseas pagar'}
+                </p>
+              </div>
             )}
-            {step === 'confirmation' && confirmationNumber && (
-              <ConfirmationModal
-                orderData={orderData}
-                confirmationNumber={confirmationNumber}
-                onNewOrder={handleReset}
-              />
-            )}
+
+            {/* Step content */}
+            <div className="step-content pb-28 lg:pb-8">
+              {step === 'entrega' && (
+                <CheckoutFlow onComplete={handleDeliveryComplete} />
+              )}
+              {step === 'datos' && (
+                <ProfileSelection
+                  onComplete={handleCustomerInfoComplete}
+                  onBack={handleBack}
+                />
+              )}
+              {step === 'pago' && (
+                <CheckoutPaymentFlow
+                  onComplete={handlePaymentComplete}
+                  onBack={handleBack}
+                />
+              )}
+              {step === 'confirmacion' && confirmationNumber && (
+                <ConfirmationModal
+                  orderData={orderData}
+                  confirmationNumber={confirmationNumber}
+                  onNewOrder={handleReset}
+                />
+              )}
+            </div>
           </div>
 
-          {/* Order Summary */}
-          {step !== 'confirmation' && (
-            <div className="lg:col-span-1">
-              <OrderSummary orderData={orderData} currentStep={step} />
+          {/* Desktop sidebar */}
+          {step !== 'confirmacion' && (
+            <div className="hidden lg:block">
+              <OrderSummary
+                orderData={{
+                  ...deliveryData,
+                  customerInfo,
+                  shippingCost,
+                }}
+                currentStep={step}
+              />
             </div>
           )}
         </div>
-      </div>
-    </div>
-  )
-}
+      </main>
 
-function DeliveryModeSelector({ onModeSelect }: { onModeSelect: (mode: 'local' | 'national' | 'pickup') => void }) {
-  return (
-    <div className="space-y-6">
-      <div>
-        <h2 className="text-2xl font-bold text-foreground">Elige tu modalidad de entrega</h2>
-        <p className="mt-2 text-muted-foreground">Selecciona cómo deseas recibir tu pedido</p>
-      </div>
-
-      <div className="space-y-4">
-        <DeliveryModeCard
-          title="Delivery Local"
-          description="Entrega a domicilio en tu zona"
-          details={['Ubicación con Google Maps', 'Costo dinámico por zona', 'Confirmación por WhatsApp']}
-          onClick={() => onModeSelect('local')}
-          icon="🚚"
-        />
-
-        <DeliveryModeCard
-          title="Envío Nacional"
-          description="Envío a través de transportista"
-          details={['MRW, Zoom, Tealca', 'Selección de sucursal', 'Seguimiento incluido']}
-          onClick={() => onModeSelect('national')}
-          icon="📦"
-        />
-
-        <DeliveryModeCard
-          title="Retiro en Tienda"
-          description="Recoge tu pedido en nuestras sedes"
-          details={['Horarios de atención', 'Código de retiro', 'Pago anticipado o en tienda']}
-          onClick={() => onModeSelect('pickup')}
-          icon="🏪"
-        />
-      </div>
-    </div>
-  )
-}
-
-function DeliveryModeCard({
-  title,
-  description,
-  details,
-  onClick,
-  icon,
-}: {
-  title: string
-  description: string
-  details: string[]
-  onClick: () => void
-  icon: string
-}) {
-  return (
-    <button
-      onClick={onClick}
-      className="w-full rounded-lg border border-border bg-card p-6 text-left transition hover:border-primary hover:bg-accent hover:shadow-lg"
-    >
-      <div className="flex items-start gap-4">
-        <span className="text-4xl">{icon}</span>
-        <div className="flex-1">
-          <h3 className="text-xl font-bold text-foreground">{title}</h3>
-          <p className="text-muted-foreground">{description}</p>
-          <ul className="mt-3 space-y-1">
-            {details.map((detail, i) => (
-              <li key={i} className="text-sm text-muted-foreground">
-                ✓ {detail}
-              </li>
-            ))}
-          </ul>
+      {/* ========== STICKY CTA BOTTOM (mobile only) ========== */}
+      {step !== 'confirmacion' && (
+        <div className="sticky-cta">
+          <div className="mx-auto max-w-xl flex items-center gap-3">
+            <div className="flex items-center gap-1.5 text-xs text-muted-foreground flex-shrink-0">
+              <Lock className="h-3.5 w-3.5" />
+              <span>Seguro</span>
+            </div>
+            <div className="flex-1 text-right">
+              <div className="text-[10px] text-muted-foreground uppercase tracking-wider font-medium">
+                Total
+              </div>
+              <div className="text-base font-bold text-foreground leading-tight">
+                {formatPrice(total)}
+              </div>
+            </div>
+          </div>
         </div>
-      </div>
-    </button>
+      )}
+    </div>
   )
 }
-
-

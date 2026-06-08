@@ -1,162 +1,92 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useState } from 'react'
+import { MapPin } from 'lucide-react'
 
 interface LocationCascadeProps {
   onSelect: (state: string, city: string, branch: string) => void
-  transport?: string | null
+  transport: string | null
+}
+
+const STATES = ['Distrito Capital', 'Miranda', 'Carabobo', 'Zulia', 'Lara', 'Aragua']
+const CITIES: Record<string, string[]> = {
+  'Distrito Capital': ['Caracas'],
+  'Miranda': ['Los Teques', 'Guarenas', 'Guatire', 'San Antonio'],
+  'Carabobo': ['Valencia', 'Puerto Cabello', 'Guacara'],
+  'Zulia': ['Maracaibo', 'San Francisco', 'Cabimas'],
+  'Lara': ['Barquisimeto', 'Cabudare', 'Carora'],
+  'Aragua': ['Maracay', 'Cagua', 'Turmero']
 }
 
 export function LocationCascade({ onSelect, transport }: LocationCascadeProps) {
-  const [selectedState, setSelectedState] = useState<string | null>(null)
-  const [selectedCity, setSelectedCity] = useState<string | null>(null)
-  const [selectedBranch, setSelectedBranch] = useState<string | null>(null)
+  const [state, setState] = useState('')
+  const [city, setCity] = useState('')
+  const [branch, setBranch] = useState('')
 
-  const states = [
-    'Amazonas',
-    'Anzoátegui',
-    'Apure',
-    'Aragua',
-    'Barinas',
-    'Bolívar',
-    'Carabobo',
-    'Cojedes',
-    'Delta Amacuro',
-    'Falcón',
-    'Guárico',
-    'Lara',
-    'Mérida',
-    'Miranda',
-    'Monagas',
-    'Nueva Esparta',
-    'Portuguesa',
-    'Sucre',
-    'Táchira',
-    'Trujillo',
-    'Vargas',
-    'Yaracuy',
-    'Zulia',
-  ]
-
-  const cityMap: Record<string, string[]> = {
-    'Nueva Esparta': ['Porlamar', 'Juan Griego', 'Pampatar'],
-    'Zulia': ['Maracaibo', 'Cabimas', 'Ciudad de Ojeda'],
-    'Aragua': ['Maracay', 'La Victoria', 'Cagua'],
-    'Carabobo': ['Valencia', 'Puerto Cabello', 'San Diego'],
-    'Bolívar': ['Ciudad Bolívar', 'Puerto Ordaz', 'Upata'],
+  const handleStateChange = (val: string) => {
+    setState(val)
+    setCity('')
+    setBranch('')
   }
 
-  const branchMap: Record<string, Record<string, string[]>> = {
-    'Nueva Esparta': {
-      'Porlamar': ['Sucursal Centro', 'Sucursal Este'],
-      'Juan Griego': ['Sucursal Principal'],
-    },
-    'Zulia': {
-      'Maracaibo': ['Sucursal Centro', 'Sucursal Norte'],
-      'Cabimas': ['Sucursal Principal'],
-    },
+  const handleCityChange = (val: string) => {
+    setCity(val)
+    setBranch('')
   }
 
-  const availableCities = useMemo(() => {
-    if (!selectedState) return []
-    return cityMap[selectedState] || ['Centro', 'Otros']
-  }, [selectedState])
-
-  const availableBranches = useMemo(() => {
-    if (!selectedState || !selectedCity) return []
-    const branches = branchMap[selectedState]?.[selectedCity]
-    if (branches) return branches
-    return [`${selectedCity} - Sucursal Principal`, `${selectedCity} - Sucursal Adicional`]
-  }, [selectedState, selectedCity])
-
-  const handleStateChange = (state: string) => {
-    setSelectedState(state)
-    setSelectedCity(null)
-    setSelectedBranch(null)
-  }
-
-  const handleCityChange = (city: string) => {
-    setSelectedCity(city)
-    setSelectedBranch(null)
-  }
-
-  const handleBranchChange = (branch: string) => {
-    setSelectedBranch(branch)
-  }
-
-  const handleConfirm = () => {
-    if (selectedState && selectedCity && selectedBranch) {
-      onSelect(selectedState, selectedCity, selectedBranch)
+  const handleBranchChange = (val: string) => {
+    setBranch(val)
+    if (state && city && val) {
+      onSelect(state, city, val)
     }
   }
 
-  const isComplete = selectedState && selectedCity && selectedBranch
-
   return (
-    <div className="space-y-4">
-      {/* State Selection */}
+    <div className="space-y-3">
       <div>
-        <label className="text-sm font-medium text-foreground">Estado</label>
-        <select
-          value={selectedState || ''}
+        <select 
+          className="select-premium"
+          value={state}
           onChange={(e) => handleStateChange(e.target.value)}
-          className="mt-2 w-full rounded-lg border border-border bg-background px-3 py-2 text-foreground"
         >
-          <option value="">Selecciona un estado</option>
-          {states.map((state) => (
-            <option key={state} value={state}>
-              {state}
-            </option>
-          ))}
+          <option value="" disabled>Selecciona el Estado</option>
+          {STATES.map(s => <option key={s} value={s}>{s}</option>)}
         </select>
       </div>
 
-      {/* City Selection */}
-      {selectedState && (
-        <div>
-          <label className="text-sm font-medium text-foreground">Ciudad</label>
-          <select
-            value={selectedCity || ''}
+      {state && (
+        <div className="animate-fade-up">
+          <select 
+            className="select-premium"
+            value={city}
             onChange={(e) => handleCityChange(e.target.value)}
-            className="mt-2 w-full rounded-lg border border-border bg-background px-3 py-2 text-foreground"
           >
-            <option value="">Selecciona una ciudad</option>
-            {availableCities.map((city) => (
-              <option key={city} value={city}>
-                {city}
-              </option>
-            ))}
+            <option value="" disabled>Selecciona la Ciudad</option>
+            {CITIES[state]?.map(c => <option key={c} value={c}>{c}</option>)}
           </select>
         </div>
       )}
 
-      {/* Branch Selection */}
-      {selectedCity && (
-        <div>
-          <label className="text-sm font-medium text-foreground">Sucursal receptora</label>
-          <select
-            value={selectedBranch || ''}
+      {city && (
+        <div className="animate-fade-up">
+          <select 
+            className="select-premium"
+            value={branch}
             onChange={(e) => handleBranchChange(e.target.value)}
-            className="mt-2 w-full rounded-lg border border-border bg-background px-3 py-2 text-foreground"
           >
-            <option value="">Selecciona una sucursal</option>
-            {availableBranches.map((branch) => (
-              <option key={branch} value={branch}>
-                {branch}
-              </option>
-            ))}
+            <option value="" disabled>Selecciona la Sucursal de {transport || 'envío'}</option>
+            <option value="Principal Centro">Principal Centro</option>
+            <option value="Sucursal Norte">Sucursal Norte</option>
+            <option value="Agencia Este">Agencia Este</option>
           </select>
         </div>
       )}
-
-      {/* Confirm Button */}
-      {isComplete && (
-        <button
-          onClick={handleConfirm}
-          className="w-full rounded-lg bg-primary py-3 font-bold text-primary-foreground transition hover:opacity-90"
-        >
-          Confirmar Ubicación de Envío
-        </button>
+      
+      {state && city && branch && (
+        <div className="flex items-center gap-2 mt-2 text-xs font-medium text-success animate-fade-in px-1">
+          <MapPin className="h-3 w-3" />
+          Destino configurado correctamente
+        </div>
       )}
     </div>
   )

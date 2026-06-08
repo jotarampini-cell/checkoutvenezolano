@@ -7,106 +7,44 @@ import { PagoReporteScreen } from './pago-reporte-screen'
 import { PagoEsperaScreen } from './pago-espera-screen'
 
 interface CheckoutPaymentFlowProps {
-  onComplete?: (data: any) => void
+  onComplete: (paymentData: any) => void
   onBack?: () => void
 }
 
-export type PaymentStep = 'metodo' | 'instrucciones' | 'reporte' | 'espera' | 'rechazado'
-
-export function CheckoutPaymentFlow({ onComplete, onBack }: CheckoutPaymentFlowProps) {
-  const [step, setStep] = useState<PaymentStep>('metodo')
+export function CheckoutPaymentFlow({ onComplete }: CheckoutPaymentFlowProps) {
   const [selectedMethod, setSelectedMethod] = useState<string | null>(null)
-  const [reporteData, setReporteData] = useState<any>(null)
+  const [showReportForm, setShowReportForm] = useState(false)
+  const [isVerifying, setIsVerifying] = useState(false)
 
-  // Mock data
-  const mockData = {
-    numeroPedido: 'VE82500681',
-    monto: {
-      bs: 1600000,
-      usd: 43.84,
-    },
-    tasaBCV: 36.50,
-    telefonoPagoMovil: '0414-123-4567',
-    bancoPagoMovil: 'Banesco',
-    cedulaReceptor: 'V-12.345.678',
-    nombreTitular: 'Juan Pérez',
-    cuentaTransferencia: '0134-0123-45-1234567890',
-    emailZelle: 'pagos@empresa.com',
+  const handleReportSubmit = (data: any) => {
+    setIsVerifying(true)
+    setTimeout(() => {
+      onComplete({ method: selectedMethod, report: data })
+    }, 2500)
   }
 
-  const handleMetodoSelect = (metodo: string) => {
-    setSelectedMethod(metodo)
-    setStep('instrucciones')
-  }
-
-  const handleBackToMetodo = () => {
-    setStep('metodo')
-  }
-
-  const handleReportComplete = (data: any) => {
-    setReporteData(data)
-    setStep('espera')
-  }
-
-  const handleNuevoPedido = () => {
-    // Reset to initial state
-    setStep('metodo')
-    setSelectedMethod(null)
-    setReporteData(null)
-    if (onComplete) {
-      onComplete({ status: 'new-order' })
-    }
-  }
-
-  const handleIrInicio = () => {
-    if (onBack) {
-      onBack()
-    }
+  if (isVerifying) {
+    return <PagoEsperaScreen />
   }
 
   return (
-    <div>
-      {step === 'metodo' && (
-        <PagoMetodoScreen
-          onMetodoSelect={handleMetodoSelect}
-          onBack={onBack}
-        />
-      )}
+    <div className="space-y-6">
+      <PagoMetodoScreen 
+        onSelect={(method) => {
+          setSelectedMethod(method)
+          setShowReportForm(true)
+        }} 
+        selected={selectedMethod} 
+      />
 
-      {step === 'instrucciones' && selectedMethod && (
-        <PagoInstruccionesScreen
-          metodo={selectedMethod}
-          numeroPedido={mockData.numeroPedido}
-          monto={mockData.monto}
-          tasaBCV={mockData.tasaBCV}
-          telefonoPagoMovil={mockData.telefonoPagoMovil}
-          bancoPagoMovil={mockData.bancoPagoMovil}
-          cedulaReceptor={mockData.cedulaReceptor}
-          nombreTitular={mockData.nombreTitular}
-          cuentaTransferencia={mockData.cuentaTransferencia}
-          emailZelle={mockData.emailZelle}
-          onReportClick={() => setStep('reporte')}
-          onBackClick={handleBackToMetodo}
-        />
-      )}
-
-      {step === 'reporte' && selectedMethod && (
-        <PagoReporteScreen
-          metodo={selectedMethod}
-          numeroPedido={mockData.numeroPedido}
-          monto={mockData.monto}
-          onReportComplete={handleReportComplete}
-          onBackClick={() => setStep('instrucciones')}
-        />
-      )}
-
-      {step === 'espera' && (
-        <PagoEsperaScreen
-          numeroPedido={mockData.numeroPedido}
-          metodo={selectedMethod || ''}
-          onNuevoPedido={handleNuevoPedido}
-          onIrInicio={handleIrInicio}
-        />
+      {selectedMethod && showReportForm && (
+        <div className="animate-fade-up space-y-6">
+          <PagoInstruccionesScreen methodId={selectedMethod} />
+          <PagoReporteScreen 
+            methodId={selectedMethod} 
+            onSubmit={handleReportSubmit} 
+          />
+        </div>
       )}
     </div>
   )

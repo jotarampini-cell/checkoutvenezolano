@@ -1,52 +1,52 @@
 'use client'
 
+import { Store, MapPin } from 'lucide-react'
+import { cn } from '@/lib/utils'
+
 interface StoreSelectorProps {
   onSelect: (store: string) => void
+  selected?: string | null
 }
 
-export function StoreSelector({ onSelect }: StoreSelectorProps) {
-  const stores = [
-    {
-      id: 'ccs-centro',
-      name: 'Caracas Centro',
-      address: 'Av. Principal, Centro Comercial',
-      hours: 'Lun-Dom: 9AM - 6PM',
-      icon: '🏬',
-    },
-    {
-      id: 'ccs-este',
-      name: 'Caracas Este',
-      address: 'Calle Real, Centro Comercial Este',
-      hours: 'Lun-Dom: 10AM - 7PM',
-      icon: '🏬',
-    },
-    {
-      id: 'margarita',
-      name: 'Margarita - Porlamar',
-      address: 'Centro Comercial Margarita',
-      hours: 'Lun-Dom: 9AM - 6PM',
-      icon: '🏝️',
-    },
-  ]
+const STORES = [
+  { id: 'Sede Chacao', name: 'Sede Chacao', address: 'Av. Francisco de Miranda, Centro Comercial', distance: '1.2 km' },
+  { id: 'Sede Las Mercedes', name: 'Sede Las Mercedes', address: 'Calle Madrid, Qta. Principal', distance: '3.5 km' },
+  { id: 'Sede La Castellana', name: 'Sede La Castellana', address: 'Av. Principal, Edificio Centro', distance: '4.1 km' }
+]
 
+export function StoreSelector({ onSelect, selected }: StoreSelectorProps) {
   return (
     <div className="space-y-3">
-      {stores.map((store) => (
-        <button
-          key={store.id}
-          onClick={() => onSelect(store.name)}
-          className="w-full rounded-lg border border-border bg-card p-4 text-left transition hover:border-primary hover:bg-accent"
-        >
-          <div className="flex items-start gap-3">
-            <span className="text-3xl">{store.icon}</span>
+      {STORES.map(store => {
+        const isSelected = selected === store.id
+        
+        return (
+          <div
+            key={store.id}
+            onClick={() => onSelect(store.id)}
+            className={cn(
+              "card-interactive p-4 flex gap-3",
+              isSelected && "selected"
+            )}
+          >
+            <div className={cn("radio-indicator mt-1", isSelected && "selected")}>
+               <div className="radio-dot" />
+            </div>
+            
             <div className="flex-1">
-              <div className="font-bold text-foreground">{store.name}</div>
-              <div className="text-sm text-muted-foreground">{store.address}</div>
-              <div className="mt-1 text-xs text-muted-foreground">⏰ {store.hours}</div>
+              <div className="flex justify-between items-start">
+                <p className="font-bold text-sm text-foreground">{store.name}</p>
+                <span className="text-[10px] font-medium text-primary bg-primary/10 px-2 py-0.5 rounded-full">{store.distance}</span>
+              </div>
+              
+              <div className="flex items-start gap-1.5 mt-1.5 text-xs text-muted-foreground">
+                <MapPin className="h-3.5 w-3.5 mt-0.5 shrink-0" />
+                <span>{store.address}</span>
+              </div>
             </div>
           </div>
-        </button>
-      ))}
+        )
+      })}
     </div>
   )
 }

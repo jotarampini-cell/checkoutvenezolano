@@ -1,359 +1,198 @@
 'use client'
 
 import { useState } from 'react'
+import { Shield, MessageCircle, X } from 'lucide-react'
 import { CustomerInfoForm } from './customer-info-form'
-import { getProfileByPhone, type CustomerProfile } from '@/lib/mock-profiles'
+import { getProfileByPhone, type CustomerInfo } from '@/lib/mock-profiles'
+import { cn } from '@/lib/utils'
 
 interface ProfileSelectionProps {
-  onComplete: (data: any) => void
-  onBack: () => void
+  onComplete: (data: CustomerInfo) => void
+  onBack?: () => void
 }
 
-interface CustomerInfo {
-  fullName: string
-  cedula: string
-  phoneNumber: string
-  email: string
-}
-
-export function ProfileSelection({ onComplete, onBack }: ProfileSelectionProps) {
-  const [step, setStep] = useState<'phone' | 'verify-code' | 'existing-profile' | 'new-registration'>('phone')
-  const [phone, setPhone] = useState('')
-  const [verificationCode, setVerificationCode] = useState('')
-  const [generatedCode, setGeneratedCode] = useState('')
-  const [foundProfile, setFoundProfile] = useState<CustomerProfile | null>(null)
-  const [errors, setErrors] = useState<Record<string, string>>({})
+export function ProfileSelection({ onComplete }: ProfileSelectionProps) {
+  const [showVerificationModal, setShowVerificationModal] = useState(false)
+  const [verifyPhone, setVerifyPhone] = useState('')
+  const [verifyCode, setVerifyCode] = useState('')
+  const [verifyStep, setVerifyStep] = useState<'phone' | 'code'>('phone')
+  const [verifyError, setVerifyError] = useState('')
   const [loading, setLoading] = useState(false)
 
-  // Validate and format phone
-  const validatePhone = (phoneStr: string): boolean => {
-    const cleaned = phoneStr.replace(/\D/g, '')
-    if (cleaned.length < 10) {
-      setErrors({ phone: 'Ingresa un número de teléfono válido' })
-      return false
-    }
-    setErrors({})
-    return true
-  }
+  // This will be passed to CustomerInfoForm if verification succeeds
+  const [prefilledData, setPrefilledData] = useState<CustomerInfo | null>(null)
 
-  // Step 1: Phone Input - Send Code
-  const handleSendCode = () => {
-    if (!validatePhone(phone)) return
-
-    setLoading(true)
-    // Simulate sending code
-    setTimeout(() => {
-      const code = Math.floor(100000 + Math.random() * 900000).toString()
-      setGeneratedCode(code)
-      setStep('verify-code')
-      setLoading(false)
-    }, 1500)
-  }
-
-  // Step 2: Verify Code and Check Profile
-  const handleVerifyCode = () => {
-    if (verificationCode !== generatedCode) {
-      setErrors({ code: 'Código incorrecto. Intenta de nuevo.' })
+  const handleSendCode = async () => {
+    if (verifyPhone.length < 10) {
+      setVerifyError('Ingresa un número válido')
       return
     }
-
-    setErrors({})
+    setVerifyError('')
     setLoading(true)
-
-    // Simulate checking profile
-    setTimeout(() => {
-      const profile = getProfileByPhone(phone)
-      
-      if (profile) {
-        // Existing customer
-        setFoundProfile(profile)
-        setStep('existing-profile')
-      } else {
-        // New customer
-        setStep('new-registration')
-      }
-      setLoading(false)
-    }, 1000)
+    // Simulate API delay
+    await new Promise(r => setTimeout(r, 1000))
+    setLoading(false)
+    setVerifyStep('code')
   }
 
-  // Use existing profile
-  const handleUseProfile = (profile: CustomerProfile) => {
-    onComplete({
-      fullName: profile.fullName,
-      cedula: profile.cedula,
-      phoneNumber: profile.phoneNumber,
-      email: profile.email,
-      isExistingProfile: true,
-      profileId: profile.id,
-    })
-  }
-
-  // New user registration complete
-  const handleNewUserComplete = (data: CustomerInfo) => {
-    onComplete({
-      ...data,
-      isExistingProfile: false,
-    })
+  const handleVerifyCode = async () => {
+    if (verifyCode.length < 4) {
+      setVerifyError('Código inválido')
+      return
+    }
+    setVerifyError('')
+    setLoading(true)
+    
+    // Simulate API delay
+    await new Promise(r => setTimeout(r, 1000))
+    
+    const profile = getProfileByPhone(verifyPhone)
+    if (profile) {
+      setPrefilledData(profile)
+      setShowVerificationModal(false)
+      // Reset state for future
+      setVerifyStep('phone')
+      setVerifyPhone('')
+      setVerifyCode('')
+    } else {
+      setVerifyError('Código incorrecto o expirado')
+    }
+    setLoading(false)
   }
 
   return (
     <div className="space-y-6">
-      {/* Step 1: Phone Input */}
-      {step === 'phone' && (
-        <div className="space-y-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <h2 className="text-2xl font-bold text-foreground">Ingresa tu teléfono</h2>
-              <p className="mt-2 text-muted-foreground">
-                Verificaremos tu número para continuar
-              </p>
-            </div>
-            <button
-              onClick={onBack}
-              className="text-sm text-muted-foreground hover:text-foreground"
-            >
-              Atrás
-            </button>
+      {/* Optional Verification Banner */}
+      {!prefilledData && (
+        <div className="rounded-xl bg-primary/5 border border-primary/10 p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 animate-fade-in">
+          <div>
+            <h3 className="text-sm font-bold text-foreground">¿Ya tienes cuenta?</h3>
+            <p className="text-xs text-muted-foreground mt-0.5">Verifica tu número y precarga tus datos guardados.</p>
           </div>
+          <button 
+            onClick={() => setShowVerificationModal(true)}
+            className="btn-ghost bg-primary/10 text-primary hover:bg-primary/20 whitespace-nowrap self-start sm:self-auto"
+          >
+            <MessageCircle className="h-4 w-4" />
+            Verificar por WhatsApp
+          </button>
+        </div>
+      )}
 
-          <div className="space-y-4">
-            {/* Phone Input */}
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-foreground">
-                Número de Teléfono *
-              </label>
-              <input
-                type="tel"
-                placeholder="+58 (414) 123-4567"
-                value={phone}
-                onChange={(e) => {
-                  setPhone(e.target.value)
-                  setErrors({})
-                }}
-                className={`w-full rounded-lg border px-4 py-3 text-foreground placeholder-muted-foreground transition focus:outline-none focus:ring-2 focus:ring-primary ${
-                  errors.phone ? 'border-red-500' : 'border-border'
-                }`}
-              />
-              {errors.phone && (
-                <p className="text-xs text-red-500">{errors.phone}</p>
-              )}
-              <p className="text-xs text-muted-foreground">
-                Formato: +58 (414) 123-4567
-              </p>
-            </div>
-
-            {/* Demo Info */}
-            <div className="rounded-lg border border-blue-200 bg-blue-50 p-3">
-              <p className="text-xs text-blue-900">
-                <strong>Números disponibles:</strong> +58 (414) 123-4567, +58 (416) 987-6543, +58 (412) 555-8888
-              </p>
-            </div>
-
-            {/* Send Code Button */}
-            <button
-              onClick={handleSendCode}
-              disabled={!phone || loading}
-              className="w-full rounded-lg bg-primary py-3 font-bold text-primary-foreground transition hover:opacity-90 disabled:opacity-50"
-            >
-              {loading ? 'Enviando código...' : 'Enviar código de verificación'}
-            </button>
+      {prefilledData && (
+        <div className="rounded-xl bg-success/10 border border-success/20 p-4 animate-fade-down flex items-start gap-3">
+          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-success/20 text-success shrink-0">
+             <Shield className="h-4 w-4" />
+          </div>
+          <div>
+            <p className="text-sm font-bold text-success">Cuenta verificada</p>
+            <p className="text-xs text-success/80 mt-0.5">Tus datos han sido precargados de forma segura.</p>
           </div>
         </div>
       )}
 
-      {/* Step 2: Code Verification */}
-      {step === 'verify-code' && (
-        <div className="space-y-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <h2 className="text-2xl font-bold text-foreground">Verifica tu código</h2>
-              <p className="mt-2 text-muted-foreground">
-                Hemos enviado un código a {phone}
-              </p>
-            </div>
-            <button
-              onClick={() => {
-                setStep('phone')
-                setVerificationCode('')
-                setGeneratedCode('')
-              }}
-              className="text-sm text-muted-foreground hover:text-foreground"
-            >
-              Atrás
-            </button>
-          </div>
+      {/* Main Data Form */}
+      <div>
+        <CustomerInfoForm 
+          initialData={prefilledData} 
+          onComplete={onComplete} 
+        />
+      </div>
 
-          <div className="space-y-4">
-            {/* Code Input */}
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-foreground">
-                Código de verificación *
-              </label>
-              <input
-                type="text"
-                placeholder="000000"
-                value={verificationCode}
-                onChange={(e) => {
-                  setVerificationCode(e.target.value.replace(/\D/g, '').slice(0, 6))
-                  setErrors({})
-                }}
-                maxLength={6}
-                className={`w-full rounded-lg border px-4 py-3 text-center text-2xl tracking-widest font-mono text-foreground placeholder-muted-foreground transition focus:outline-none focus:ring-2 focus:ring-primary ${
-                  errors.code ? 'border-red-500' : 'border-border'
-                }`}
-              />
-              {errors.code && (
-                <p className="text-xs text-red-500">{errors.code}</p>
-              )}
-            </div>
-
-            {/* Demo Info - Show Code */}
-            <div className="rounded-lg border border-amber-200 bg-amber-50 p-3">
-              <p className="text-xs text-amber-900">
-                <strong>Código de demostración:</strong> {generatedCode}
-              </p>
-            </div>
-
-            {/* Verify Button */}
-            <button
-              onClick={handleVerifyCode}
-              disabled={verificationCode.length !== 6 || loading}
-              className="w-full rounded-lg bg-primary py-3 font-bold text-primary-foreground transition hover:opacity-90 disabled:opacity-50"
-            >
-              {loading ? 'Verificando...' : 'Verificar código'}
-            </button>
-          </div>
+      <div className="flex justify-center pt-2">
+        <div className="trust-badge animate-fade-in">
+          <Shield className="h-3.5 w-3.5" />
+          Tus datos están encriptados y protegidos
         </div>
-      )}
+      </div>
 
-      {/* Step 3: Existing Profile Confirmation */}
-      {step === 'existing-profile' && foundProfile && (
-        <div className="space-y-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <h2 className="text-2xl font-bold text-foreground">Bienvenido de vuelta</h2>
-              <p className="mt-2 text-muted-foreground">
-                ¿Confirmas esta información?
-              </p>
-            </div>
-            <button
-              onClick={() => setStep('phone')}
-              className="text-sm text-muted-foreground hover:text-foreground"
+      {/* Verification Modal */}
+      {showVerificationModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-background/80 backdrop-blur-sm animate-fade-in">
+          <div className="w-full max-w-sm rounded-2xl bg-card p-6 shadow-xl border border-border animate-scale-in relative">
+            <button 
+              onClick={() => setShowVerificationModal(false)}
+              className="absolute top-4 right-4 p-1 rounded-full hover:bg-muted text-muted-foreground transition-colors"
             >
-              Atrás
+              <X className="h-5 w-5" />
             </button>
-          </div>
-
-          {/* Profile Card - Preselected */}
-          <div className="rounded-lg border-2 border-green-400 bg-green-50 p-1">
-            <div className="rounded-lg bg-card p-6">
-              <div className="space-y-4">
-                {/* Header with Icon */}
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <span className="text-4xl">✓</span>
-                    <div>
-                      <p className="text-xs font-medium text-green-700">PERFIL PRESELECCIONADO</p>
-                      <p className="text-sm text-muted-foreground">Tus datos están listos</p>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Name Section */}
-                <div className="border-b border-border pb-4">
-                  <p className="text-xs font-medium text-muted-foreground mb-1">NOMBRE</p>
-                  <p className="text-xl font-bold text-foreground">{foundProfile.fullName}</p>
-                </div>
-
-                {/* Details Grid */}
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <p className="text-xs font-medium text-muted-foreground mb-1">CÉDULA</p>
-                    <p className="font-semibold text-foreground">{foundProfile.cedula}</p>
-                  </div>
-                  <div>
-                    <p className="text-xs font-medium text-muted-foreground mb-1">TELÉFONO</p>
-                    <p className="font-semibold text-foreground">{foundProfile.phoneNumber}</p>
-                  </div>
-                </div>
-
-                {/* Email */}
-                {foundProfile.email && (
-                  <div>
-                    <p className="text-xs font-medium text-muted-foreground mb-1">CORREO</p>
-                    <p className="font-semibold text-foreground">{foundProfile.email}</p>
-                  </div>
-                )}
-
-                {/* Delivery Zone */}
-                {foundProfile.defaultDeliveryZone && (
-                  <div className="rounded-lg bg-muted p-3">
-                    <p className="text-xs font-medium text-muted-foreground mb-1">ZONA FAVORITA</p>
-                    <p className="font-semibold text-foreground">{foundProfile.defaultDeliveryZone}</p>
-                  </div>
-                )}
-
-                {/* Last Order */}
-                {foundProfile.lastOrderDate && (
-                  <div className="text-xs text-muted-foreground">
-                    Último pedido: {new Date(foundProfile.lastOrderDate).toLocaleDateString('es-VE')}
-                  </div>
-                )}
+            
+            <div className="mb-6 flex flex-col items-center text-center">
+              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10 text-primary mb-3">
+                <MessageCircle className="h-6 w-6" />
               </div>
+              <h2 className="text-lg font-bold">Verificación rápida</h2>
+              <p className="text-sm text-muted-foreground mt-1">Te enviaremos un código por WhatsApp</p>
+            </div>
+
+            {verifyStep === 'phone' ? (
+              <div className="space-y-4">
+                <div className="floating-label-group">
+                  <input
+                    type="tel"
+                    inputMode="tel"
+                    placeholder=" "
+                    className={cn("input-premium", verifyPhone && "has-value", verifyError && "error")}
+                    value={verifyPhone}
+                    onChange={(e) => {
+                      setVerifyPhone(e.target.value)
+                      setVerifyError('')
+                    }}
+                  />
+                  <label>Número de WhatsApp</label>
+                </div>
+                {verifyError && <p className="text-xs text-destructive">{verifyError}</p>}
+                
+                <button 
+                  onClick={handleSendCode}
+                  disabled={loading || !verifyPhone}
+                  className="btn-primary w-full"
+                >
+                  {loading ? <div className="spinner" /> : "Enviar código"}
+                </button>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                <p className="text-sm text-center text-foreground font-medium">
+                  Enviado al {verifyPhone}
+                </p>
+                <div className="floating-label-group">
+                  <input
+                    type="text"
+                    inputMode="numeric"
+                    placeholder=" "
+                    className={cn("input-premium text-center tracking-widest text-lg font-bold", verifyCode && "has-value", verifyError && "error")}
+                    value={verifyCode}
+                    onChange={(e) => {
+                      setVerifyCode(e.target.value)
+                      setVerifyError('')
+                    }}
+                    maxLength={6}
+                  />
+                  <label className="text-center w-full left-0">Código de 4 dígitos</label>
+                </div>
+                {verifyError && <p className="text-xs text-destructive">{verifyError}</p>}
+                
+                <button 
+                  onClick={handleVerifyCode}
+                  disabled={loading || verifyCode.length < 4}
+                  className="btn-primary w-full"
+                >
+                  {loading ? <div className="spinner" /> : "Verificar y continuar"}
+                </button>
+                <button 
+                  onClick={() => setVerifyStep('phone')}
+                  className="w-full text-xs text-muted-foreground font-medium hover:text-primary transition-colors text-center mt-2"
+                >
+                  Cambiar número
+                </button>
+              </div>
+            )}
+            
+            <div className="mt-4 rounded-lg bg-blue-50 border border-blue-100 p-3 text-xs text-blue-800">
+              <span className="font-bold">Para probar:</span> Usa cualquier teléfono y el código <span className="font-mono bg-white px-1 py-0.5 rounded border border-blue-200">1234</span>
             </div>
           </div>
-
-          {/* Action Buttons */}
-          <div className="space-y-3">
-            <button
-              onClick={() => handleUseProfile(foundProfile)}
-              className="w-full rounded-lg bg-green-600 py-3 font-bold text-white transition hover:bg-green-700"
-            >
-              Confirmar y Continuar
-            </button>
-
-            <button
-              onClick={() => setStep('phone')}
-              className="w-full rounded-lg border border-border bg-background py-3 font-bold text-foreground transition hover:bg-muted"
-            >
-              Cambiar número de teléfono
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* Step 4: New Registration */}
-      {step === 'new-registration' && (
-        <div className="space-y-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <h2 className="text-2xl font-bold text-foreground">Crea tu perfil</h2>
-              <p className="mt-2 text-muted-foreground">
-                Completa tu información para continuar
-              </p>
-            </div>
-            <button
-              onClick={() => setStep('phone')}
-              className="text-sm text-muted-foreground hover:text-foreground"
-            >
-              Atrás
-            </button>
-          </div>
-
-          {/* Show verified phone */}
-          <div className="rounded-lg border border-green-200 bg-green-50 p-3">
-            <p className="text-xs text-green-900">
-              <strong>Teléfono verificado:</strong> {phone}
-            </p>
-          </div>
-
-          {/* Registration Form */}
-          <CustomerInfoForm
-            onComplete={handleNewUserComplete}
-            onBack={() => setStep('phone')}
-            showPhoneField={false}
-            prefilledPhone={phone}
-          />
         </div>
       )}
     </div>

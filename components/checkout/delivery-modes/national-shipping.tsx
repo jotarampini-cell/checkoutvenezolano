@@ -3,42 +3,36 @@
 import { useState } from 'react'
 import { TransportSelector } from '../transport-selector'
 import { LocationCascade } from '../location-cascade'
+import { Package, MapPin, Building2, Clock, Truck, CheckCircle2 } from 'lucide-react'
+import { cn } from '@/lib/utils'
 
 interface NationalShippingProps {
-  step: number
-  onStepChange: (step: number) => void
   onComplete: (data: any) => void
 }
 
-export function NationalShipping({ step, onStepChange, onComplete }: NationalShippingProps) {
+export function NationalShipping({ onComplete }: NationalShippingProps) {
   const [selectedTransport, setSelectedTransport] = useState<string | null>(null)
-  const [selectedState, setSelectedState] = useState<string | null>(null)
-  const [selectedCity, setSelectedCity] = useState<string | null>(null)
-  const [selectedBranch, setSelectedBranch] = useState<string | null>(null)
-  const [cost, setCost] = useState<number>(0)
+  const [locationData, setLocationData] = useState<{state: string; city: string; branch: string} | null>(null)
+  const [cost, setCost] = useState<number | null>(null)
 
   const handleTransportSelect = (transport: string) => {
     setSelectedTransport(transport)
-    onStepChange(2)
   }
 
   const handleLocationSelect = (state: string, city: string, branch: string) => {
-    setSelectedState(state)
-    setSelectedCity(city)
-    setSelectedBranch(branch)
-    // Calculate cost based on transport and destination
+    setLocationData({ state, city, branch })
     const baseCost = 150000
     setCost(baseCost)
-    onStepChange(3)
   }
 
   const handleConfirm = () => {
+    if (!locationData || !selectedTransport) return
     onComplete({
       mode: 'national',
       transport: selectedTransport,
-      state: selectedState,
-      city: selectedCity,
-      branch: selectedBranch,
+      state: locationData.state,
+      city: locationData.city,
+      branch: locationData.branch,
       shippingCost: cost,
       eta: '3-5 días hábiles',
     })
@@ -46,74 +40,69 @@ export function NationalShipping({ step, onStepChange, onComplete }: NationalShi
 
   return (
     <div className="space-y-6">
-      {step >= 1 && (
-        <div className="rounded-lg border border-border bg-card p-6">
-          <div className="mb-4 flex items-center gap-3">
-            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-sm font-bold text-primary-foreground">
-              1
-            </div>
-            <h3 className="text-lg font-bold text-foreground">Elige empresa de transporte</h3>
-          </div>
-          {step === 1 ? (
-            <TransportSelector onSelect={handleTransportSelect} />
+      <div className="space-y-3">
+        <label className="text-sm font-semibold text-foreground flex items-center gap-2">
+          {selectedTransport ? (
+            <CheckCircle2 className="h-4 w-4 text-success" />
           ) : (
-            <div className="rounded bg-muted p-3 text-sm text-foreground">
-              ✓ Transportista: <span className="font-bold">{selectedTransport}</span>
-            </div>
+            <div className="flex h-5 w-5 items-center justify-center rounded-full bg-primary/20 text-[11px] font-bold text-primary">1</div>
           )}
-        </div>
-      )}
+          Elige empresa de transporte
+        </label>
+        <TransportSelector onSelect={handleTransportSelect} selected={selectedTransport} />
+      </div>
 
-      {step >= 2 && (
-        <div className="rounded-lg border border-border bg-card p-6">
-          <div className="mb-4 flex items-center gap-3">
-            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-sm font-bold text-primary-foreground">
-              2
-            </div>
-            <h3 className="text-lg font-bold text-foreground">Selecciona estado, ciudad y sucursal</h3>
-          </div>
-          {step === 2 ? (
-            <LocationCascade onSelect={handleLocationSelect} transport={selectedTransport} />
-          ) : (
-            <div className="space-y-2 rounded bg-muted p-3">
-              <div className="text-sm text-foreground">✓ Destino configurado:</div>
-              <div className="text-sm text-muted-foreground">
-                <div>{selectedState} → {selectedCity}</div>
-                <div className="font-bold text-foreground">Sucursal: {selectedBranch}</div>
-              </div>
-            </div>
-          )}
-        </div>
-      )}
-
-      {step >= 3 && (
-        <div className="rounded-lg border border-border bg-card p-6">
-          <div className="mb-4 flex items-center gap-3">
-            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-sm font-bold text-primary-foreground">
-              3
-            </div>
-            <h3 className="text-lg font-bold text-foreground">Confirma tu envío</h3>
-          </div>
-          <div className="space-y-3">
-            <div className="rounded bg-muted p-3">
-              <div className="text-sm font-medium text-foreground">Resumen de envío:</div>
-              <div className="mt-2 space-y-1 text-sm text-muted-foreground">
-                <div>• Transportista: {selectedTransport}</div>
-                <div>• Destino: {selectedState} → {selectedCity}</div>
-                <div>• Sucursal: {selectedBranch}</div>
-                <div className="font-bold text-foreground">• Costo: ${cost.toLocaleString()}</div>
-                <div>• Tiempo estimado: 3-5 días hábiles</div>
-              </div>
-            </div>
-            {step === 3 && (
-              <button
-                onClick={handleConfirm}
-                className="w-full rounded-lg bg-primary py-3 font-bold text-primary-foreground transition hover:opacity-90"
-              >
-                Continuar al Pago
-              </button>
+      <div className={cn("transition-all duration-500", selectedTransport ? "opacity-100" : "opacity-40 pointer-events-none grayscale-[0.5]")}>
+        <div className="space-y-3 pt-2">
+          <label className="text-sm font-semibold text-foreground flex items-center gap-2">
+            {locationData ? (
+              <CheckCircle2 className="h-4 w-4 text-success" />
+            ) : (
+              <div className="flex h-5 w-5 items-center justify-center rounded-full bg-primary/20 text-[11px] font-bold text-primary">2</div>
             )}
+            Destino del envío
+          </label>
+          <LocationCascade onSelect={handleLocationSelect} transport={selectedTransport} />
+        </div>
+      </div>
+
+      {locationData && cost !== null && selectedTransport && (
+        <div className="animate-fade-up space-y-4 pt-4 border-t border-border mt-2">
+          <div className="rounded-xl bg-muted/50 p-4 space-y-3 border border-border">
+            <div className="flex items-start gap-3">
+              <Building2 className="h-5 w-5 text-muted-foreground mt-0.5 shrink-0" />
+              <div>
+                <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">Detalles de envío por {selectedTransport}</p>
+                <p className="text-sm font-medium text-foreground mt-0.5 leading-snug">{locationData.state} → {locationData.city}</p>
+                <p className="text-xs text-muted-foreground mt-1">Sucursal: {locationData.branch}</p>
+              </div>
+            </div>
+            
+            <div className="divider my-2" />
+            
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <Clock className="h-4 w-4" />
+                <span>Tiempo estimado:</span>
+              </div>
+              <span className="font-semibold text-foreground text-sm">3-5 días hábiles</span>
+            </div>
+            
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <Truck className="h-4 w-4" />
+                <span>Costo de envío:</span>
+              </div>
+              <span className="font-bold text-primary text-sm">${cost.toLocaleString()}</span>
+            </div>
           </div>
+
+          <button
+            onClick={handleConfirm}
+            className="btn-primary"
+          >
+            Continuar con este envío
+          </button>
         </div>
       )}
     </div>

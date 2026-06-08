@@ -3,30 +3,27 @@
 import { useState } from 'react'
 import { MapPicker } from '../map-picker'
 import { ZoneSelector } from '../zone-selector'
+import { MapPin, Navigation, Clock, DollarSign, CheckCircle2 } from 'lucide-react'
+import { cn } from '@/lib/utils'
 
 interface LocalDeliveryProps {
-  step: number
-  onStepChange: (step: number) => void
   onComplete: (data: any) => void
 }
 
-export function LocalDelivery({ step, onStepChange, onComplete }: LocalDeliveryProps) {
+export function LocalDelivery({ onComplete }: LocalDeliveryProps) {
   const [selectedZone, setSelectedZone] = useState<string | null>(null)
   const [location, setLocation] = useState<{ lat: number; lng: number; address: string } | null>(null)
-  const [cost, setCost] = useState<number>(0)
+  const [cost, setCost] = useState<number | null>(null)
 
   const handleZoneSelect = (zone: string) => {
     setSelectedZone(zone)
-    onStepChange(2)
   }
 
   const handleLocationSelect = (coords: { lat: number; lng: number; address: string }) => {
     setLocation(coords)
-    // Calculate cost based on zone
     const baseCost = 50000
-    const costMultiplier = Math.floor(Math.random() * 2) + 1 // Random 50k or 100k
+    const costMultiplier = Math.floor(Math.random() * 2) + 1
     setCost(baseCost * costMultiplier)
-    onStepChange(3)
   }
 
   const handleConfirm = () => {
@@ -41,74 +38,69 @@ export function LocalDelivery({ step, onStepChange, onComplete }: LocalDeliveryP
 
   return (
     <div className="space-y-6">
-      {step >= 1 && (
-        <div className="rounded-lg border border-border bg-card p-6">
-          <div className="mb-4 flex items-center gap-3">
-            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-sm font-bold text-primary-foreground">
-              1
-            </div>
-            <h3 className="text-lg font-bold text-foreground">Selecciona tu zona de delivery</h3>
-          </div>
-          {step === 1 ? (
-            <ZoneSelector onSelect={handleZoneSelect} />
+      <div className="space-y-3">
+        <label className="text-sm font-semibold text-foreground flex items-center gap-2">
+          {selectedZone ? (
+            <CheckCircle2 className="h-4 w-4 text-success" />
           ) : (
-            <div className="rounded bg-muted p-3 text-sm text-foreground">
-              ✓ Zona seleccionada: <span className="font-bold">{selectedZone}</span>
-            </div>
+            <div className="flex h-5 w-5 items-center justify-center rounded-full bg-primary/20 text-[11px] font-bold text-primary">1</div>
           )}
-        </div>
-      )}
+          ¿En qué zona te encuentras?
+        </label>
+        <ZoneSelector onSelect={handleZoneSelect} selected={selectedZone} />
+      </div>
 
-      {step >= 2 && (
-        <div className="rounded-lg border border-border bg-card p-6">
-          <div className="mb-4 flex items-center gap-3">
-            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-sm font-bold text-primary-foreground">
-              2
-            </div>
-            <h3 className="text-lg font-bold text-foreground">Ubica tu dirección en el mapa</h3>
-          </div>
-          {step === 2 ? (
-            <MapPicker onSelect={handleLocationSelect} />
-          ) : (
-            <div className="space-y-2 rounded bg-muted p-3">
-              <div className="text-sm text-foreground">
-                ✓ Ubicación: <span className="font-bold">{location?.address}</span>
-              </div>
-              <div className="text-xs text-muted-foreground">
-                Coordenadas: {location?.lat.toFixed(4)}, {location?.lng.toFixed(4)}
-              </div>
-            </div>
-          )}
-        </div>
-      )}
-
-      {step >= 3 && (
-        <div className="rounded-lg border border-border bg-card p-6">
-          <div className="mb-4 flex items-center gap-3">
-            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-sm font-bold text-primary-foreground">
-              3
-            </div>
-            <h3 className="text-lg font-bold text-foreground">Confirma tu pedido</h3>
-          </div>
-          <div className="space-y-3">
-            <div className="rounded bg-muted p-3">
-              <div className="text-sm font-medium text-foreground">Resumen de entrega:</div>
-              <div className="mt-2 space-y-1 text-sm text-muted-foreground">
-                <div>• Zona: {selectedZone}</div>
-                <div>• Dirección: {location?.address}</div>
-                <div className="font-bold text-foreground">• Costo: ${cost.toLocaleString()}</div>
-                <div>• Tiempo estimado: 30-45 minutos</div>
-              </div>
-            </div>
-            {step === 3 && (
-              <button
-                onClick={handleConfirm}
-                className="w-full rounded-lg bg-primary py-3 font-bold text-primary-foreground transition hover:opacity-90"
-              >
-                Continuar al Pago
-              </button>
+      <div className={cn("transition-all duration-500", selectedZone ? "opacity-100" : "opacity-40 pointer-events-none grayscale-[0.5]")}>
+        <div className="space-y-3 pt-2">
+          <label className="text-sm font-semibold text-foreground flex items-center gap-2">
+            {location ? (
+              <CheckCircle2 className="h-4 w-4 text-success" />
+            ) : (
+              <div className="flex h-5 w-5 items-center justify-center rounded-full bg-primary/20 text-[11px] font-bold text-primary">2</div>
             )}
+            Confirma tu ubicación exacta
+          </label>
+          <MapPicker onSelect={handleLocationSelect} />
+        </div>
+      </div>
+
+      {location && cost !== null && (
+        <div className="animate-fade-up space-y-4 pt-4 border-t border-border mt-2">
+          <div className="rounded-xl bg-muted/50 p-4 space-y-3 border border-border">
+            <div className="flex items-start gap-3">
+              <MapPin className="h-5 w-5 text-muted-foreground mt-0.5 shrink-0" />
+              <div>
+                <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">Dirección de entrega</p>
+                <p className="text-sm font-medium text-foreground mt-0.5 leading-snug">{location.address}</p>
+                <p className="text-xs text-muted-foreground mt-1">{selectedZone}</p>
+              </div>
+            </div>
+            
+            <div className="divider my-2" />
+            
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <Clock className="h-4 w-4" />
+                <span>Tiempo estimado:</span>
+              </div>
+              <span className="font-semibold text-foreground text-sm">30-45 min</span>
+            </div>
+            
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <DollarSign className="h-4 w-4" />
+                <span>Costo de delivery:</span>
+              </div>
+              <span className="font-bold text-primary text-sm">${cost.toLocaleString()}</span>
+            </div>
           </div>
+
+          <button
+            onClick={handleConfirm}
+            className="btn-primary"
+          >
+            Continuar con esta entrega
+          </button>
         </div>
       )}
     </div>

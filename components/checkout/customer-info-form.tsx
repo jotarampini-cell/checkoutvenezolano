@@ -1,211 +1,174 @@
 'use client'
 
-import { useState } from 'react'
-
-interface CustomerInfo {
-  fullName: string
-  cedula: string
-  phoneNumber: string
-  email: string
-}
+import { useState, useEffect } from 'react'
+import { CustomerInfo } from '@/lib/mock-profiles'
+import { User, CreditCard, Phone, Mail } from 'lucide-react'
+import { cn } from '@/lib/utils'
 
 interface CustomerInfoFormProps {
   onComplete: (data: CustomerInfo) => void
-  onBack: () => void
-  showPhoneField?: boolean
-  prefilledPhone?: string
+  initialData?: CustomerInfo | null
 }
 
-export function CustomerInfoForm({ 
-  onComplete, 
-  onBack, 
-  showPhoneField = true,
-  prefilledPhone = ''
-}: CustomerInfoFormProps) {
+export function CustomerInfoForm({ onComplete, initialData }: CustomerInfoFormProps) {
   const [formData, setFormData] = useState<CustomerInfo>({
-    fullName: '',
-    cedula: '',
-    phoneNumber: prefilledPhone,
+    name: '',
+    idType: 'V',
+    idNumber: '',
+    phone: '',
     email: '',
   })
+  const [errors, setErrors] = useState<Record<string, string>>({})
 
-  const [errors, setErrors] = useState<Partial<CustomerInfo>>({})
-
-  const validateForm = () => {
-    const newErrors: Partial<CustomerInfo> = {}
-
-    if (!formData.fullName.trim()) {
-      newErrors.fullName = 'El nombre es requerido'
+  useEffect(() => {
+    if (initialData) {
+      setFormData(initialData)
     }
+  }, [initialData])
 
-    if (!formData.cedula.trim()) {
-      newErrors.cedula = 'La cédula es requerida'
-    } else if (!/^\d{6,8}$/.test(formData.cedula.replace(/[.-]/g, ''))) {
-      newErrors.cedula = 'Cédula inválida (6-8 dígitos)'
+  const validateField = (field: keyof CustomerInfo, value: string) => {
+    let error = ''
+    switch (field) {
+      case 'name':
+        if (!value.trim()) error = 'El nombre es requerido'
+        break
+      case 'idNumber':
+        if (!value.trim()) error = 'La cédula es requerida'
+        else if (!/^\d+$/.test(value)) error = 'Solo números'
+        break
+      case 'phone':
+        if (!value.trim()) error = 'El teléfono es requerido'
+        else if (value.length < 10) error = 'Teléfono inválido'
+        break
+      case 'email':
+        if (value && !/^\S+@\S+\.\S+$/.test(value)) error = 'Email inválido'
+        break
     }
+    setErrors(prev => ({ ...prev, [field]: error }))
+    return !error
+  }
 
-    if (!formData.phoneNumber.trim()) {
-      newErrors.phoneNumber = 'El teléfono es requerido'
-    } else if (!/^[0-9+\-\s()]{10,20}$/.test(formData.phoneNumber)) {
-      newErrors.phoneNumber = 'Teléfono inválido'
-    }
-
-    if (formData.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-      newErrors.email = 'Correo inválido'
-    }
-
-    setErrors(newErrors)
-    return Object.keys(newErrors).length === 0
+  const handleBlur = (field: keyof CustomerInfo) => {
+    validateField(field, formData[field] || '')
   }
 
   const handleChange = (field: keyof CustomerInfo, value: string) => {
-    setFormData((prev) => ({ ...prev, [field]: value }))
+    setFormData(prev => ({ ...prev, [field]: value }))
+    // Clear error when user types
     if (errors[field]) {
-      setErrors((prev) => ({ ...prev, [field]: undefined }))
+      setErrors(prev => ({ ...prev, [field]: '' }))
     }
   }
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    if (validateForm()) {
+  const handleSubmit = () => {
+    const isNameValid = validateField('name', formData.name)
+    const isIdValid = validateField('idNumber', formData.idNumber)
+    const isPhoneValid = validateField('phone', formData.phone)
+    const isEmailValid = validateField('email', formData.email || '')
+
+    if (isNameValid && isIdValid && isPhoneValid && isEmailValid) {
       onComplete(formData)
     }
   }
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-2xl font-bold text-foreground">Tu Información</h2>
-          <p className="mt-2 text-muted-foreground">
-            Necesitamos estos datos para procesar tu pedido
-          </p>
-        </div>
-        <button
-          onClick={onBack}
-          className="text-sm text-muted-foreground hover:text-foreground"
-        >
-          Atrás
-        </button>
-      </div>
-
-      {/* Form */}
-      <form onSubmit={handleSubmit} className="space-y-4">
-        {/* Full Name */}
-        <div className="space-y-2">
-          <label className="text-sm font-medium text-foreground">
-            Nombre Completo *
-          </label>
-          <input
-            type="text"
-            placeholder="Juan Carlos Pérez"
-            value={formData.fullName}
-            onChange={(e) => handleChange('fullName', e.target.value)}
-            className={`w-full rounded-lg border px-4 py-2 text-foreground placeholder-muted-foreground transition focus:outline-none focus:ring-2 focus:ring-primary ${
-              errors.fullName ? 'border-red-500' : 'border-border'
-            }`}
-          />
-          {errors.fullName && (
-            <p className="text-xs text-red-500">{errors.fullName}</p>
-          )}
+    <div className="space-y-5">
+      <div className="card-premium p-4 sm:p-6 space-y-5">
+        <h3 className="text-base font-bold text-foreground flex items-center gap-2 mb-2">
+          <User className="h-5 w-5 text-primary" />
+          Tus datos personales
+        </h3>
+        
+        {/* Nombre Completo */}
+        <div className="space-y-1">
+          <div className="floating-label-group">
+            <input
+              type="text"
+              placeholder=" "
+              className={cn("input-premium", formData.name && "has-value", errors.name && "error")}
+              value={formData.name}
+              onChange={(e) => handleChange('name', e.target.value)}
+              onBlur={() => handleBlur('name')}
+            />
+            <label>Nombre y Apellido</label>
+          </div>
+          {errors.name && <p className="text-xs text-destructive px-1">{errors.name}</p>}
         </div>
 
-        {/* Cedula */}
-        <div className="space-y-2">
-          <label className="text-sm font-medium text-foreground">
-            Cédula de Identidad *
-          </label>
-          <input
-            type="text"
-            placeholder="12.345.678 o 12345678"
-            value={formData.cedula}
-            onChange={(e) => handleChange('cedula', e.target.value)}
-            className={`w-full rounded-lg border px-4 py-2 text-foreground placeholder-muted-foreground transition focus:outline-none focus:ring-2 focus:ring-primary ${
-              errors.cedula ? 'border-red-500' : 'border-border'
-            }`}
-          />
-          {errors.cedula && (
-            <p className="text-xs text-red-500">{errors.cedula}</p>
-          )}
-          <p className="text-xs text-muted-foreground">Formato: 12.345.678 o sin puntos</p>
+        {/* Cédula */}
+        <div className="space-y-1">
+          <div className="flex gap-2">
+            <div className="w-24 shrink-0">
+              <select 
+                className="select-premium font-semibold"
+                value={formData.idType}
+                onChange={(e) => handleChange('idType', e.target.value)}
+              >
+                <option value="V">V</option>
+                <option value="E">E</option>
+                <option value="J">J</option>
+              </select>
+            </div>
+            <div className="flex-1 floating-label-group">
+              <input
+                type="text"
+                inputMode="numeric"
+                placeholder=" "
+                className={cn("input-premium", formData.idNumber && "has-value", errors.idNumber && "error")}
+                value={formData.idNumber}
+                onChange={(e) => {
+                  const val = e.target.value.replace(/\D/g, '')
+                  handleChange('idNumber', val)
+                }}
+                onBlur={() => handleBlur('idNumber')}
+              />
+              <label>Cédula o RIF</label>
+            </div>
+          </div>
+          {errors.idNumber && <p className="text-xs text-destructive px-1">{errors.idNumber}</p>}
         </div>
 
-        {/* Phone Number */}
-        {showPhoneField && (
-          <div className="space-y-2">
-            <label className="text-sm font-medium text-foreground">
-              Número de Teléfono *
-            </label>
+        {/* Teléfono */}
+        <div className="space-y-1">
+          <div className="floating-label-group">
             <input
               type="tel"
-              placeholder="+58 (414) 123-4567 o 02121234567"
-              value={formData.phoneNumber}
-              onChange={(e) => handleChange('phoneNumber', e.target.value)}
-              className={`w-full rounded-lg border px-4 py-2 text-foreground placeholder-muted-foreground transition focus:outline-none focus:ring-2 focus:ring-primary ${
-                errors.phoneNumber ? 'border-red-500' : 'border-border'
-              }`}
+              inputMode="tel"
+              placeholder=" "
+              className={cn("input-premium", formData.phone && "has-value", errors.phone && "error")}
+              value={formData.phone}
+              onChange={(e) => handleChange('phone', e.target.value)}
+              onBlur={() => handleBlur('phone')}
             />
-            {errors.phoneNumber && (
-              <p className="text-xs text-red-500">{errors.phoneNumber}</p>
-            )}
-            <p className="text-xs text-muted-foreground">
-              Incluyendo el código de país (+58)
-            </p>
+            <label>Teléfono (WhatsApp)</label>
           </div>
-        )}
-        {!showPhoneField && prefilledPhone && (
-          <div className="space-y-2">
-            <label className="text-sm font-medium text-foreground">
-              Número de Teléfono
-            </label>
-            <div className="rounded-lg border border-border bg-muted px-4 py-2 text-foreground">
-              {prefilledPhone}
-            </div>
-            <p className="text-xs text-muted-foreground">
-              Verificado con código SMS
-            </p>
-          </div>
-        )}
+          {errors.phone && <p className="text-xs text-destructive px-1">{errors.phone}</p>}
+        </div>
 
         {/* Email */}
-        <div className="space-y-2">
-          <label className="text-sm font-medium text-foreground">
-            Correo Electrónico (Opcional)
-          </label>
-          <input
-            type="email"
-            placeholder="tu@correo.com"
-            value={formData.email}
-            onChange={(e) => handleChange('email', e.target.value)}
-            className={`w-full rounded-lg border px-4 py-2 text-foreground placeholder-muted-foreground transition focus:outline-none focus:ring-2 focus:ring-primary ${
-              errors.email ? 'border-red-500' : 'border-border'
-            }`}
-          />
-          {errors.email && (
-            <p className="text-xs text-red-500">{errors.email}</p>
-          )}
-          <p className="text-xs text-muted-foreground">
-            Para recibir confirmación y seguimiento por correo
-          </p>
+        <div className="space-y-1">
+          <div className="floating-label-group">
+            <input
+              type="email"
+              inputMode="email"
+              placeholder=" "
+              className={cn("input-premium", formData.email && "has-value", errors.email && "error")}
+              value={formData.email || ''}
+              onChange={(e) => handleChange('email', e.target.value)}
+              onBlur={() => handleBlur('email')}
+            />
+            <label>Correo electrónico (Opcional)</label>
+          </div>
+          {errors.email && <p className="text-xs text-destructive px-1">{errors.email}</p>}
         </div>
+      </div>
 
-        {/* Info Box */}
-        <div className="rounded-lg border border-blue-200 bg-blue-50 p-4">
-          <p className="text-xs text-blue-900">
-            <strong>ℹ️ Privacidad:</strong> Tu información está protegida y solo
-            será usada para procesar tu pedido. No la compartimos con terceros.
-          </p>
-        </div>
-
-        {/* Submit Button */}
-        <button
-          type="submit"
-          className="w-full rounded-lg bg-primary py-3 font-bold text-primary-foreground transition hover:opacity-90"
-        >
-          Continuar
-        </button>
-      </form>
+      <button
+        onClick={handleSubmit}
+        className="btn-primary"
+      >
+        Continuar al Pago
+      </button>
     </div>
   )
 }
