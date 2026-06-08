@@ -343,10 +343,10 @@ export default function CheckoutPage() {
       {/* Floating Bottom Bar for Mobile */}
       {step !== 'confirmacion' && (
         <div className="fixed bottom-0 left-0 right-0 p-3 bg-background/85 backdrop-blur-md border-t border-border lg:hidden z-40 animate-fade-up shadow-[0_-4px_10px_rgba(0,0,0,0.05)]">
-          <div className="flex items-center justify-between max-w-lg mx-auto">
-            <div>
+          <div className="flex items-center justify-between gap-4 max-w-lg mx-auto">
+            <div className="flex-1 overflow-hidden">
               <p className="text-[10px] text-muted-foreground font-semibold uppercase tracking-wider">Total a pagar</p>
-              <p className="text-base font-bold text-foreground leading-none mt-1">{formatPrice(total)}</p>
+              <p className="text-base font-bold text-foreground leading-none mt-1 tabular-nums truncate">{formatPrice(total)}</p>
             </div>
             <button 
               onClick={() => {
@@ -354,7 +354,7 @@ export default function CheckoutPage() {
                 if (btn) btn.click();
               }}
               disabled={cartItems.length === 0 || step === 'pago'}
-              className={cn("btn-primary py-2 px-5 text-sm rounded-lg w-auto", step === 'pago' ? "opacity-0 pointer-events-none" : "opacity-100")}
+              className={cn("btn-primary shrink-0 w-[120px] py-2 px-4 text-sm rounded-lg", step === 'pago' ? "opacity-0 pointer-events-none" : "opacity-100")}
             >
               Continuar
             </button>
