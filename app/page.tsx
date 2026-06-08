@@ -354,7 +354,7 @@ export default function CheckoutPage() {
                 if (btn) btn.click();
               }}
               disabled={cartItems.length === 0 || step === 'pago'}
-              className={cn("btn-primary shrink-0 w-[120px] py-2 px-4 text-sm rounded-lg", step === 'pago' ? "opacity-0 pointer-events-none" : "opacity-100")}
+              className={cn("btn-primary shrink-0 !w-[120px] !flex-none py-2 px-4 text-sm rounded-lg", step === 'pago' ? "opacity-0 pointer-events-none" : "opacity-100")}
             >
               Continuar
             </button>
