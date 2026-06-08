@@ -15,31 +15,33 @@ export function ConfirmationModal({ orderData, confirmationNumber, totalFormatte
   const [copied, setCopied] = useState(false)
 
   useEffect(() => {
-    // Fire confetti on mount
     const duration = 3 * 1000
-    const end = Date.now() + duration
+    const animationEnd = Date.now() + duration
+    const defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 0 }
 
-    const frame = () => {
-      confetti({
-        particleCount: 5,
-        angle: 60,
-        spread: 55,
-        origin: { x: 0 },
-        colors: ['#2563eb', '#16a34a', '#fbbf24']
-      })
-      confetti({
-        particleCount: 5,
-        angle: 120,
-        spread: 55,
-        origin: { x: 1 },
-        colors: ['#2563eb', '#16a34a', '#fbbf24']
-      })
+    const randomInRange = (min: number, max: number) => Math.random() * (max - min) + min
 
-      if (Date.now() < end) {
-        requestAnimationFrame(frame)
+    const interval: any = setInterval(function() {
+      const timeLeft = animationEnd - Date.now()
+
+      if (timeLeft <= 0) {
+        return clearInterval(interval)
       }
-    }
-    frame()
+
+      const particleCount = 50 * (timeLeft / duration)
+      confetti({
+        ...defaults, particleCount,
+        origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 },
+        colors: ['#2563eb', '#16a34a', '#fbbf24', '#ffffff']
+      })
+      confetti({
+        ...defaults, particleCount,
+        origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 },
+        colors: ['#2563eb', '#16a34a', '#fbbf24', '#ffffff']
+      })
+    }, 250)
+
+    return () => clearInterval(interval)
   }, [])
 
   const handleCopy = () => {

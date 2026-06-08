@@ -58,19 +58,26 @@ export function OrderSummary({
         </div>
       </div>
 
-      <div className="bg-muted/50 p-2 mx-6 mt-4 rounded-lg flex items-center justify-between">
-        <button 
-          onClick={() => onCurrencyChange?.('USD')}
-          className={cn("flex-1 text-xs font-bold py-1.5 rounded-md transition-colors", currency === 'USD' ? "bg-background shadow-sm text-foreground" : "text-muted-foreground hover:text-foreground")}
-        >
-          USD $
-        </button>
-        <button 
-          onClick={() => onCurrencyChange?.('VES')}
-          className={cn("flex-1 text-xs font-bold py-1.5 rounded-md transition-colors", currency === 'VES' ? "bg-background shadow-sm text-foreground" : "text-muted-foreground hover:text-foreground")}
-        >
-          VES Bs
-        </button>
+      <div className="bg-muted/50 p-1.5 mx-6 mt-4 rounded-lg flex flex-col gap-1.5">
+        <div className="flex items-center justify-between">
+          <button 
+            onClick={() => onCurrencyChange?.('USD')}
+            className={cn("flex-1 text-xs font-bold py-1.5 rounded-md transition-colors", currency === 'USD' ? "bg-background shadow-sm text-foreground" : "text-muted-foreground hover:text-foreground")}
+          >
+            USD $
+          </button>
+          <button 
+            onClick={() => onCurrencyChange?.('VES')}
+            className={cn("flex-1 text-xs font-bold py-1.5 rounded-md transition-colors", currency === 'VES' ? "bg-background shadow-sm text-foreground" : "text-muted-foreground hover:text-foreground")}
+          >
+            VES Bs
+          </button>
+        </div>
+        {currency === 'VES' && (
+          <p className="text-[10px] text-muted-foreground text-center font-medium">
+            Tasa de cambio: Bs. {EXCHANGE_RATE} / USD
+          </p>
+        )}
       </div>
 
       <div className="p-6 pt-4">

@@ -43,8 +43,14 @@ export function MapPicker({ onSelect }: MapPickerProps) {
         onPointerUp={handleDragEnd}
         onPointerLeave={handleDragEnd}
       >
-        <div className={cn("absolute inset-0 bg-[url('https://api.mapbox.com/styles/v1/mapbox/light-v11/static/-66.86,10.48,12/600x400?access_token=pk.eyJ1IjoiZXhhbXBsZSIsImEiOiJja2V4YW1wbGUifQ.example')] bg-cover bg-center mix-blend-luminosity transition-opacity", isDragging ? "opacity-60" : "opacity-40")} />
-        <div className="absolute inset-0 bg-background/20 backdrop-blur-[2px]" />
+        <div className={cn("absolute inset-0 transition-opacity duration-300 pointer-events-none", isDragging ? "opacity-60" : "opacity-40")}>
+          <iframe 
+            src="https://www.openstreetmap.org/export/embed.html?bbox=-66.9536%2C10.4506%2C-66.8536%2C10.5106&layer=mapnik" 
+            className="w-[150%] h-[150%] -ml-[25%] -mt-[25%]"
+            style={{ border: 0 }} 
+          />
+        </div>
+        <div className="absolute inset-0 bg-background/20 backdrop-blur-[1px] pointer-events-none" />
         
         <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
           <div className={cn("transition-all duration-300 flex h-10 w-10 items-center justify-center rounded-full backdrop-blur-md shadow-glow", 

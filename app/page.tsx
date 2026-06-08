@@ -162,19 +162,26 @@ export default function CheckoutPage() {
               <div className="mt-4 animate-fade-down lg:hidden">
                 <div className="rounded-xl bg-card border border-border p-4 shadow-lg space-y-4">
                   {/* Currency Toggle Mobile */}
-                  <div className="flex items-center justify-between bg-muted/50 p-1 rounded-lg">
-                    <button 
-                      onClick={() => setCurrency('USD')}
-                      className={cn("flex-1 text-xs font-bold py-1.5 rounded-md transition-colors", currency === 'USD' ? "bg-background shadow-sm text-foreground" : "text-muted-foreground")}
-                    >
-                      USD $
-                    </button>
-                    <button 
-                      onClick={() => setCurrency('VES')}
-                      className={cn("flex-1 text-xs font-bold py-1.5 rounded-md transition-colors", currency === 'VES' ? "bg-background shadow-sm text-foreground" : "text-muted-foreground")}
-                    >
-                      VES Bs
-                    </button>
+                  <div className="bg-muted/50 p-1.5 rounded-lg flex flex-col gap-1.5">
+                    <div className="flex items-center justify-between">
+                      <button 
+                        onClick={() => setCurrency('USD')}
+                        className={cn("flex-1 text-xs font-bold py-1.5 rounded-md transition-colors", currency === 'USD' ? "bg-background shadow-sm text-foreground" : "text-muted-foreground")}
+                      >
+                        USD $
+                      </button>
+                      <button 
+                        onClick={() => setCurrency('VES')}
+                        className={cn("flex-1 text-xs font-bold py-1.5 rounded-md transition-colors", currency === 'VES' ? "bg-background shadow-sm text-foreground" : "text-muted-foreground")}
+                      >
+                        VES Bs
+                      </button>
+                    </div>
+                    {currency === 'VES' && (
+                      <p className="text-[10px] text-muted-foreground text-center font-medium">
+                        Tasa de cambio: Bs. {EXCHANGE_RATE} / USD
+                      </p>
+                    )}
                   </div>
 
                   {/* Products List */}
@@ -335,11 +342,11 @@ export default function CheckoutPage() {
       </main>
       {/* Floating Bottom Bar for Mobile */}
       {step !== 'confirmacion' && (
-        <div className="fixed bottom-0 left-0 right-0 p-4 bg-background/80 backdrop-blur-md border-t border-border lg:hidden z-40 animate-fade-up">
+        <div className="fixed bottom-0 left-0 right-0 p-3 bg-background/85 backdrop-blur-md border-t border-border lg:hidden z-40 animate-fade-up shadow-[0_-4px_10px_rgba(0,0,0,0.05)]">
           <div className="flex items-center justify-between max-w-lg mx-auto">
             <div>
-              <p className="text-xs text-muted-foreground font-medium">Total a pagar</p>
-              <p className="text-lg font-bold text-foreground">{formatPrice(total)}</p>
+              <p className="text-[10px] text-muted-foreground font-semibold uppercase tracking-wider">Total a pagar</p>
+              <p className="text-base font-bold text-foreground leading-none mt-1">{formatPrice(total)}</p>
             </div>
             <button 
               onClick={() => {
@@ -348,7 +355,7 @@ export default function CheckoutPage() {
                 else if (step === 'datos') setStep('pago')
               }}
               disabled={cartItems.length === 0 || step === 'pago'}
-              className={cn("btn-primary py-2.5 px-6 rounded-xl w-auto", step === 'pago' ? "opacity-0 pointer-events-none" : "opacity-100")}
+              className={cn("btn-primary py-2 px-5 text-sm rounded-lg w-auto", step === 'pago' ? "opacity-0 pointer-events-none" : "opacity-100")}
             >
               Continuar
             </button>
