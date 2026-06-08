@@ -1,6 +1,6 @@
 'use client'
 
-import { ShoppingBag } from 'lucide-react'
+import { ShoppingBag, Tag } from 'lucide-react'
 import { CartItemList, CartItem } from './cart-item-list'
 
 interface OrderSummaryProps {
