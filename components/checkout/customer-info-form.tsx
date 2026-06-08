@@ -32,14 +32,18 @@ export function CustomerInfoForm({ onComplete, initialData }: CustomerInfoFormPr
       case 'name':
         if (!value.trim()) error = 'El nombre es requerido'
         break
-      case 'idNumber':
-        if (!value.trim()) error = 'La cédula es requerida'
-        else if (!/^\d+$/.test(value)) error = 'Solo números'
+      case 'idNumber': {
+        const rawId = value.replace(/\D/g, '')
+        if (!rawId) error = 'La cédula es requerida'
+        else if (rawId.length < 6) error = 'Cédula muy corta'
         break
-      case 'phone':
-        if (!value.trim()) error = 'El teléfono es requerido'
-        else if (value.length < 10) error = 'Teléfono inválido'
+      }
+      case 'phone': {
+        const rawPhone = value.replace(/\D/g, '')
+        if (!rawPhone) error = 'El teléfono es requerido'
+        else if (rawPhone.length < 11) error = 'Debe tener 11 dígitos'
         break
+      }
       case 'email':
         if (value && !/^\S+@\S+\.\S+$/.test(value)) error = 'Email inválido'
         break
@@ -118,7 +122,8 @@ export function CustomerInfoForm({ onComplete, initialData }: CustomerInfoFormPr
                 value={formData.idNumber}
                 onChange={(e) => {
                   const val = e.target.value.replace(/\D/g, '')
-                  handleChange('idNumber', val)
+                  const formatted = val.replace(/\B(?=(\d{3})+(?!\d))/g, '.')
+                  handleChange('idNumber', formatted)
                 }}
                 onBlur={() => handleBlur('idNumber')}
               />
@@ -137,7 +142,14 @@ export function CustomerInfoForm({ onComplete, initialData }: CustomerInfoFormPr
               placeholder=" "
               className={cn("input-premium", formData.phone && "has-value", errors.phone && "error")}
               value={formData.phone}
-              onChange={(e) => handleChange('phone', e.target.value)}
+              onChange={(e) => {
+                const val = e.target.value.replace(/\D/g, '')
+                let formatted = val
+                if (val.length > 4) {
+                  formatted = `${val.slice(0, 4)}-${val.slice(4, 11)}`
+                }
+                handleChange('phone', formatted)
+              }}
               onBlur={() => handleBlur('phone')}
             />
             <label>Teléfono (WhatsApp)</label>

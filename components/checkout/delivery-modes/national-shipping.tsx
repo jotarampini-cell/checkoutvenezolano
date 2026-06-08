@@ -21,8 +21,7 @@ export function NationalShipping({ onComplete }: NationalShippingProps) {
 
   const handleLocationSelect = (state: string, city: string, branch: string) => {
     setLocationData({ state, city, branch })
-    const baseCost = 150000
-    setCost(baseCost)
+    setCost(0) // Cobro a destino
   }
 
   const handleConfirm = () => {
@@ -91,9 +90,9 @@ export function NationalShipping({ onComplete }: NationalShippingProps) {
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2 text-sm text-muted-foreground">
                 <Truck className="h-4 w-4" />
-                <span>Costo de envío:</span>
+                <span>Modalidad de envío:</span>
               </div>
-              <span className="font-bold text-primary text-sm">${cost.toLocaleString()}</span>
+              <span className="font-bold text-primary text-sm">Cobro a destino</span>
             </div>
           </div>
 

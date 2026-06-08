@@ -15,15 +15,25 @@ export function LocalDelivery({ onComplete }: LocalDeliveryProps) {
   const [location, setLocation] = useState<{ lat: number; lng: number; address: string } | null>(null)
   const [cost, setCost] = useState<number | null>(null)
 
+  const getZoneCost = (zone: string | null) => {
+    if (!zone) return null
+    const low = ['Chacao', 'Altamira', 'Los Palos Grandes']
+    const mid = ['El Rosal', 'Bello Monte', 'Las Mercedes', 'La Castellana']
+    const high = ['La Florida', 'Los Ruices']
+    
+    if (low.includes(zone)) return 2
+    if (mid.includes(zone)) return 4
+    if (high.includes(zone)) return 5
+    return 6 // Macaracuay and others
+  }
+
   const handleZoneSelect = (zone: string) => {
     setSelectedZone(zone)
+    setCost(getZoneCost(zone))
   }
 
   const handleLocationSelect = (coords: { lat: number; lng: number; address: string }) => {
     setLocation(coords)
-    const baseCost = 50000
-    const costMultiplier = Math.floor(Math.random() * 2) + 1
-    setCost(baseCost * costMultiplier)
   }
 
   const handleConfirm = () => {
@@ -77,6 +87,11 @@ export function LocalDelivery({ onComplete }: LocalDeliveryProps) {
             </div>
             
             <div className="divider my-2" />
+            
+            <div className="flex justify-between items-center text-sm font-medium">
+              <span className="text-muted-foreground">Costo de delivery</span>
+              <span className="text-foreground">${cost}</span>
+            </div>
             
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2 text-sm text-muted-foreground">

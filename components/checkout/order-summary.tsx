@@ -81,7 +81,11 @@ export function OrderSummary({
           <div className="flex justify-between text-sm">
             <span className="text-muted-foreground">Envío {orderData?.mode ? `(${orderData.mode})` : ''}</span>
             <span className="font-medium text-foreground">
-              {shippingCost > 0 ? formatPrice(shippingCost) : (orderData?.mode ? 'Gratis' : 'Por calcular')}
+              {shippingCost > 0 
+                ? formatPrice(shippingCost) 
+                : (orderData?.mode === 'national' 
+                    ? 'Cobro a destino' 
+                    : (orderData?.mode ? 'Gratis' : 'Por calcular'))}
             </span>
           </div>
 

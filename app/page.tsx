@@ -166,12 +166,17 @@ export default function CheckoutPage() {
                         <span className="text-muted-foreground">Envío</span>
                         <span className="font-medium">{formatPrice(shippingCost)}</span>
                       </div>
+                    ) : (deliveryData?.mode === 'national' ? (
+                      <div className="flex justify-between text-sm">
+                        <span className="text-muted-foreground">Envío</span>
+                        <span className="font-medium">Cobro a destino</span>
+                      </div>
                     ) : (
                       <div className="flex justify-between text-sm">
                         <span className="text-muted-foreground">Envío</span>
                         <span className="text-xs font-medium text-muted-foreground">Por calcular</span>
                       </div>
-                    )}
+                    ))}
                     <div className="flex justify-between text-base font-bold pt-2 border-t border-border mt-2">
                       <span>Total a pagar</span>
                       <span className="text-foreground">{formatPrice(total)}</span>
@@ -240,7 +245,15 @@ export default function CheckoutPage() {
             )}
 
             {/* Step content */}
-            <div className="step-content pb-28 lg:pb-8">
+            {cartItems.length === 0 && (
+              <div className="card-premium p-6 text-center text-muted-foreground animate-fade-in mb-6 border-destructive/20 bg-destructive/5">
+                <ShoppingBag className="h-10 w-10 mx-auto mb-3 opacity-20 text-destructive" />
+                <p className="font-bold text-foreground">Tu carrito está vacío</p>
+                <p className="text-sm mt-1">Agrega al menos un producto para continuar con tu orden.</p>
+              </div>
+            )}
+
+            <div className={cn("step-content pb-28 lg:pb-8", cartItems.length === 0 && "opacity-40 pointer-events-none grayscale-[0.5]")}>
               {step === 'entrega' && (
                 <CheckoutFlow onComplete={handleDeliveryComplete} />
               )}
