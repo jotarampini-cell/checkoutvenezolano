@@ -2,8 +2,17 @@
 
 import { useState, useEffect } from 'react'
 import { CustomerInfo } from '@/lib/mock-profiles'
-import { User, CreditCard, Phone, Mail, CheckCircle2, AlertCircle } from 'lucide-react'
+import { User, Phone, Mail, CheckCircle2, AlertCircle, ChevronDown } from 'lucide-react'
 import { cn } from '@/lib/utils'
+
+// Venezuelan carrier prefixes
+const VE_PREFIXES = [
+  { value: '0412', label: '0412', carrier: 'Digitel' },
+  { value: '0414', label: '0414', carrier: 'Movistar' },
+  { value: '0416', label: '0416', carrier: 'Movistar' },
+  { value: '0424', label: '0424', carrier: 'Movilnet' },
+  { value: '0426', label: '0426', carrier: 'Movilnet' },
+]
 
 interface CustomerInfoFormProps {
   onComplete: (data: CustomerInfo) => void
@@ -100,17 +109,34 @@ export function CustomerInfoForm({ onComplete, initialData }: CustomerInfoFormPr
     phone: '',
     email: '',
   })
+  const [phonePrefix, setPhonePrefix] = useState('0414') // default Movistar
+  const [phoneSuffix, setPhoneSuffix] = useState('')
   const [touched, setTouched] = useState<TouchedFields>({})
 
   useEffect(() => {
     if (initialData) {
       setFormData(initialData)
-      // pre-mark all filled fields as touched so they show green immediately
+      // If we have a stored phone, split it back
+      if (initialData.phone) {
+        const raw = initialData.phone.replace(/\D/g, '')
+        const prefix = VE_PREFIXES.find(p => raw.startsWith(p.value.replace(/\D/g,'')))?.value || '0414'
+        setPhonePrefix(prefix)
+        setPhoneSuffix(raw.slice(4, 11))
+      }
       const t: TouchedFields = {}
       Object.entries(initialData).forEach(([k, v]) => { if (v) t[k] = true })
       setTouched(t)
     }
   }, [initialData])
+
+  // Keep formData.phone in sync with prefix+suffix
+  useEffect(() => {
+    const combined = phoneSuffix ? `${phonePrefix}-${phoneSuffix}` : ''
+    setFormData(prev => ({ ...prev, phone: combined }))
+    if (phoneSuffix && !touched.phone) {
+      setTouched(prev => ({ ...prev, phone: true }))
+    }
+  }, [phonePrefix, phoneSuffix])
 
   const handleChange = (field: keyof CustomerInfo, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }))
@@ -225,38 +251,64 @@ export function CustomerInfoForm({ onComplete, initialData }: CustomerInfoFormPr
           <FieldFeedback status={touched.idNumber ? idStatus : 'idle'} error={getFieldError('idNumber', formData.idNumber)} />
         </div>
 
-        {/* Teléfono */}
+        {/* Teléfono con selector de operadora */}
         <div className="space-y-0.5">
-          <div className="floating-label-group relative">
-            <input
-              type="tel"
-              inputMode="tel"
-              placeholder=" "
-              className={cn(
-                'input-premium pr-10',
-                formData.phone && 'has-value',
-                phoneStatus === 'error' && touched.phone && 'error',
-                phoneStatus === 'valid' && 'success'
+          <label className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider ml-1 flex items-center gap-1.5">
+            <Phone className="h-3 w-3" /> Teléfono (WhatsApp)
+          </label>
+          <div className="flex gap-2">
+            {/* Carrier prefix selector */}
+            <div className="relative shrink-0">
+              <select
+                value={phonePrefix}
+                onChange={(e) => setPhonePrefix(e.target.value)}
+                className="select-premium !w-[100px] font-bold text-sm appearance-none pr-7"
+              >
+                {VE_PREFIXES.map(p => (
+                  <option key={p.value} value={p.value}>
+                    {p.value}
+                  </option>
+                ))}
+              </select>
+            </div>
+            {/* Suffix: 7 digits */}
+            <div className="relative flex-1">
+              <input
+                type="tel"
+                inputMode="numeric"
+                placeholder="000 0000"
+                maxLength={8}
+                className={cn(
+                  'input-premium pr-10 tracking-wider',
+                  phoneSuffix && 'has-value',
+                  phoneStatus === 'error' && touched.phone && 'error',
+                  phoneStatus === 'valid' && 'success'
+                )}
+                value={phoneSuffix}
+                onChange={(e) => {
+                  const digits = e.target.value.replace(/\D/g, '').slice(0, 7)
+                  setPhoneSuffix(digits)
+                }}
+                onBlur={() => handleBlur('phone')}
+              />
+              {phoneStatus === 'valid' && (
+                <CheckCircle2 className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-emerald-500 field-success-icon pointer-events-none" />
               )}
-              value={formData.phone}
-              onChange={(e) => {
-                const val = e.target.value.replace(/\D/g, '')
-                let formatted = val
-                if (val.length > 4) {
-                  formatted = `${val.slice(0, 4)}-${val.slice(4, 11)}`
-                }
-                handleChange('phone', formatted)
-              }}
-              onBlur={() => handleBlur('phone')}
-            />
-            <label>Teléfono (WhatsApp)</label>
-            {phoneStatus === 'valid' && (
-              <CheckCircle2 className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-emerald-500 field-success-icon pointer-events-none" />
-            )}
-            {phoneStatus === 'error' && touched.phone && (
-              <AlertCircle className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-destructive pointer-events-none animate-fade-in" />
-            )}
+              {phoneStatus === 'error' && touched.phone && (
+                <AlertCircle className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-destructive pointer-events-none animate-fade-in" />
+              )}
+              {/* Digit counter */}
+              {phoneSuffix.length > 0 && phoneSuffix.length < 7 && (
+                <span className="absolute right-10 top-1/2 -translate-y-1/2 text-[10px] font-bold text-muted-foreground pointer-events-none">
+                  {7 - phoneSuffix.length} más
+                </span>
+              )}
+            </div>
           </div>
+          {/* Carrier label */}
+          <p className="text-[11px] text-muted-foreground ml-1 mt-1">
+            {VE_PREFIXES.find(p => p.value === phonePrefix)?.carrier} · {phonePrefix}
+          </p>
           <FieldFeedback status={touched.phone ? phoneStatus : 'idle'} error={getFieldError('phone', formData.phone)} />
         </div>
 

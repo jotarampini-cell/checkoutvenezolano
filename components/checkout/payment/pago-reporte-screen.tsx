@@ -11,7 +11,8 @@ interface PagoReporteScreenProps {
 
 export function PagoReporteScreen({ methodId, onSubmit }: PagoReporteScreenProps) {
   const [ref, setRef] = useState('')
-  const [date, setDate] = useState('')
+  const todayStr = new Date().toISOString().split('T')[0] // "YYYY-MM-DD"
+  const [date, setDate] = useState(todayStr)
   const [capture, setCapture] = useState<File | null>(null)
   
   const fileInputRef = useRef<HTMLInputElement>(null)

@@ -364,8 +364,8 @@ export default function CheckoutPage() {
         <div className="fixed bottom-0 left-0 right-0 p-3 bg-background/85 backdrop-blur-md border-t border-border lg:hidden z-40 animate-fade-up shadow-[0_-4px_10px_rgba(0,0,0,0.05)]">
           <div className="flex items-center justify-between gap-4 max-w-lg mx-auto">
             <div className="flex-1 overflow-hidden">
-              <p className="text-[10px] text-muted-foreground font-semibold uppercase tracking-wider">Total a pagar</p>
-              <p className="text-base font-bold text-foreground leading-none mt-1 tabular-nums truncate">{formatPrice(total)}</p>
+              <p className="text-[10px] text-foreground/60 font-bold uppercase tracking-widest">Total a pagar</p>
+              <p className="text-lg font-extrabold text-foreground leading-none mt-0.5 tabular-nums truncate">{formatPrice(total)}</p>
             </div>
             <button 
               onClick={() => {
