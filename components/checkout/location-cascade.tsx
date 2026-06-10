@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { MapPin } from 'lucide-react'
 
 interface LocationCascadeProps {
@@ -22,16 +22,25 @@ export function LocationCascade({ onSelect, transport }: LocationCascadeProps) {
   const [state, setState] = useState('')
   const [city, setCity] = useState('')
   const [branch, setBranch] = useState('')
+  
+  const cityRef = useRef<HTMLDivElement>(null)
+  const branchRef = useRef<HTMLDivElement>(null)
 
   const handleStateChange = (val: string) => {
     setState(val)
     setCity('')
     setBranch('')
+    setTimeout(() => {
+      cityRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+    }, 150)
   }
 
   const handleCityChange = (val: string) => {
     setCity(val)
     setBranch('')
+    setTimeout(() => {
+      branchRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+    }, 150)
   }
 
   const handleBranchChange = (val: string) => {
@@ -55,7 +64,7 @@ export function LocationCascade({ onSelect, transport }: LocationCascadeProps) {
       </div>
 
       {state && (
-        <div className="animate-fade-up">
+        <div ref={cityRef} className="animate-fade-up scroll-mt-4">
           <select 
             className="select-premium"
             value={city}
@@ -68,7 +77,7 @@ export function LocationCascade({ onSelect, transport }: LocationCascadeProps) {
       )}
 
       {city && (
-        <div className="animate-fade-up">
+        <div ref={branchRef} className="animate-fade-up scroll-mt-4">
           <select 
             className="select-premium"
             value={branch}
