@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { TransportSelector } from '../transport-selector'
 import { LocationCascade } from '../location-cascade'
 import { Package, MapPin, Building2, Clock, Truck, CheckCircle2 } from 'lucide-react'
@@ -15,9 +15,14 @@ export function NationalShipping({ onComplete }: NationalShippingProps) {
   const [locationData, setLocationData] = useState<{state: string; city: string; branch: string} | null>(null)
   const [cost, setCost] = useState<number | null>(null)
   const [showErrors, setShowErrors] = useState(false)
+  const locationSectionRef = useRef<HTMLDivElement>(null)
 
   const handleTransportSelect = (transport: string) => {
     setSelectedTransport(transport)
+    // Auto-scroll to destination section
+    setTimeout(() => {
+      locationSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    }, 150)
   }
 
   const handleLocationSelect = (state: string, city: string, branch: string) => {
@@ -61,7 +66,10 @@ export function NationalShipping({ onComplete }: NationalShippingProps) {
         )}
       </div>
 
-      <div className={cn("transition-all duration-500", selectedTransport ? "opacity-100" : "opacity-40 pointer-events-none grayscale-[0.5]")}>
+      <div
+        ref={locationSectionRef}
+        className={cn("transition-all duration-500 scroll-mt-4", selectedTransport ? "opacity-100" : "opacity-40 pointer-events-none grayscale-[0.5]")}
+      >
         <div className={cn("space-y-3 p-3 rounded-xl transition-all", showErrors && selectedTransport && !locationData && "bg-destructive/5 ring-1 ring-destructive error-highlight")}>
           <label className={cn("text-sm font-semibold flex items-center gap-2", showErrors && selectedTransport && !locationData ? "text-destructive" : "text-foreground")}>
             {locationData ? (

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { MapPicker } from '../map-picker'
 import { ZoneSelector } from '../zone-selector'
 import { MapPin, Navigation, Clock, DollarSign, CheckCircle2 } from 'lucide-react'
@@ -16,6 +16,7 @@ export function LocalDelivery({ onComplete }: LocalDeliveryProps) {
   const [cost, setCost] = useState<number | null>(null)
   const [reference, setReference] = useState('')
   const [showErrors, setShowErrors] = useState(false)
+  const mapSectionRef = useRef<HTMLDivElement>(null)
 
   const getZoneCost = (zone: string | null) => {
     if (!zone) return null
@@ -32,6 +33,10 @@ export function LocalDelivery({ onComplete }: LocalDeliveryProps) {
   const handleZoneSelect = (zone: string) => {
     setSelectedZone(zone)
     setCost(getZoneCost(zone))
+    // Auto-scroll to map section after a short delay (let state re-render first)
+    setTimeout(() => {
+      mapSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    }, 150)
   }
 
   const handleLocationSelect = (coords: { lat: number; lng: number; address: string }) => {
@@ -77,7 +82,10 @@ export function LocalDelivery({ onComplete }: LocalDeliveryProps) {
         )}
       </div>
 
-      <div className={cn("transition-all duration-500", selectedZone ? "opacity-100" : "opacity-40 pointer-events-none grayscale-[0.5]")}>
+      <div
+        ref={mapSectionRef}
+        className={cn("transition-all duration-500 scroll-mt-4", selectedZone ? "opacity-100" : "opacity-40 pointer-events-none grayscale-[0.5]")}
+      >
         <div className={cn("space-y-3 p-3 rounded-xl transition-all", showErrors && selectedZone && !location && "bg-destructive/5 ring-1 ring-destructive error-highlight")}>
           <label className={cn("text-sm font-semibold flex items-center gap-2", showErrors && selectedZone && !location ? "text-destructive" : "text-foreground")}>
             {location ? (
