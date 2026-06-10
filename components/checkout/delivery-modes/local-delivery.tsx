@@ -21,6 +21,7 @@ export function LocalDelivery({ onComplete }: LocalDeliveryProps) {
   const [showErrors, setShowErrors] = useState(false)
   const zoneSectionRef = useRef<HTMLDivElement>(null)
   const mapSectionRef = useRef<HTMLDivElement>(null)
+  const summarySectionRef = useRef<HTMLDivElement>(null)
 
   const getZoneCost = (cityId: string | null, zoneId: string | null) => {
     if (!cityId || !zoneId) return null
@@ -49,6 +50,9 @@ export function LocalDelivery({ onComplete }: LocalDeliveryProps) {
 
   const handleLocationSelect = (coords: { lat: number; lng: number; address: string }) => {
     setLocation(coords)
+    setTimeout(() => {
+      summarySectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+    }, 150)
   }
 
   const handleConfirm = () => {
@@ -141,7 +145,7 @@ export function LocalDelivery({ onComplete }: LocalDeliveryProps) {
       </div>
 
       {location && cost !== null && (
-        <div className="animate-fade-up space-y-4 pt-4 border-t border-border mt-2">
+        <div ref={summarySectionRef} className="animate-fade-up space-y-4 pt-4 border-t border-border mt-2 scroll-mt-4">
           <div className="rounded-xl bg-muted/50 p-4 space-y-3 border border-border">
             <div className="flex items-start gap-3">
               <MapPin className="h-5 w-5 text-muted-foreground mt-0.5 shrink-0" />

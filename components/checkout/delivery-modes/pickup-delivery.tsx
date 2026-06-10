@@ -14,12 +14,20 @@ export function PickupDelivery({ onComplete }: PickupDeliveryProps) {
   const [paymentOption, setPaymentOption] = useState<'online' | 'store' | null>(null)
   const [showErrors, setShowErrors] = useState(false)
   const paymentSectionRef = useRef<HTMLDivElement>(null)
+  const summarySectionRef = useRef<HTMLDivElement>(null)
 
   const handleStoreSelect = (store: string) => {
     setSelectedStore(store)
     // Auto-scroll to payment options
     setTimeout(() => {
       paymentSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    }, 150)
+  }
+
+  const handlePaymentOptionSelect = (option: 'online' | 'store') => {
+    setPaymentOption(option)
+    setTimeout(() => {
+      summarySectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' })
     }, 150)
   }
 
@@ -72,7 +80,7 @@ export function PickupDelivery({ onComplete }: PickupDeliveryProps) {
           </label>
           <div className="grid gap-3 sm:grid-cols-2">
             <div 
-              onClick={() => setPaymentOption('online')}
+              onClick={() => handlePaymentOptionSelect('online')}
               className={cn(
                 "card-interactive p-4 flex gap-3",
                 paymentOption === 'online' && "selected"
@@ -91,7 +99,7 @@ export function PickupDelivery({ onComplete }: PickupDeliveryProps) {
             </div>
 
             <div 
-              onClick={() => setPaymentOption('store')}
+              onClick={() => handlePaymentOptionSelect('store')}
               className={cn(
                 "card-interactive p-4 flex gap-3",
                 paymentOption === 'store' && "selected"
@@ -116,7 +124,7 @@ export function PickupDelivery({ onComplete }: PickupDeliveryProps) {
       </div>
 
       {selectedStore && paymentOption && (
-        <div className="animate-fade-up space-y-4 pt-4 border-t border-border mt-2">
+        <div ref={summarySectionRef} className="animate-fade-up space-y-4 pt-4 border-t border-border mt-2 scroll-mt-4">
           <div className="rounded-xl bg-muted/50 p-4 space-y-3 border border-border">
             <div className="flex items-start gap-3">
               <Store className="h-5 w-5 text-muted-foreground mt-0.5 shrink-0" />

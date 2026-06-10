@@ -16,6 +16,7 @@ export function NationalShipping({ onComplete }: NationalShippingProps) {
   const [cost, setCost] = useState<number | null>(null)
   const [showErrors, setShowErrors] = useState(false)
   const locationSectionRef = useRef<HTMLDivElement>(null)
+  const summarySectionRef = useRef<HTMLDivElement>(null)
 
   const handleTransportSelect = (transport: string) => {
     setSelectedTransport(transport)
@@ -28,6 +29,9 @@ export function NationalShipping({ onComplete }: NationalShippingProps) {
   const handleLocationSelect = (state: string, city: string, branch: string) => {
     setLocationData({ state, city, branch })
     setCost(0) // Cobro a destino
+    setTimeout(() => {
+      summarySectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+    }, 150)
   }
 
   const handleConfirm = () => {
@@ -87,7 +91,7 @@ export function NationalShipping({ onComplete }: NationalShippingProps) {
       </div>
 
       {locationData && cost !== null && selectedTransport && (
-        <div className="animate-fade-up space-y-4 pt-4 border-t border-border mt-2">
+        <div ref={summarySectionRef} className="animate-fade-up space-y-4 pt-4 border-t border-border mt-2 scroll-mt-4">
           <div className="rounded-xl bg-muted/50 p-4 space-y-3 border border-border">
             <div className="flex items-start gap-3">
               <Building2 className="h-5 w-5 text-muted-foreground mt-0.5 shrink-0" />
