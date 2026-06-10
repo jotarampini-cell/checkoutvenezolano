@@ -82,12 +82,12 @@ export function OrderSummary({
             onClick={() => handleCurrencyChange('VES')}
             className={cn("flex-1 text-xs font-bold py-1.5 rounded-md transition-colors", currency === 'VES' ? "bg-background shadow-sm text-foreground" : "text-muted-foreground hover:text-foreground")}
           >
-            VES Bs
+            VES
           </button>
         </div>
         {currency === 'VES' && (
           <p className="text-[10px] text-muted-foreground text-center font-medium">
-            Tasa de cambio: Bs. {EXCHANGE_RATE} / USD
+            Tasa BCV: {EXCHANGE_RATE.toLocaleString('es-VE')} Bs. / $1
           </p>
         )}
       </div>

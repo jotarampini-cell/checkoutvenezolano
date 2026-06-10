@@ -11,7 +11,7 @@ interface PagoMetodoScreenProps {
 
 const PAYMENT_METHODS = [
   { id: 'pago-movil', name: 'Pago Móvil', description: 'Banco a banco por teléfono', icon: Smartphone, currency: 'VES' },
-  { id: 'transferencia', name: 'Transferencia bancaria', description: 'A cuenta corriente o de ahorro', icon: Building2, currency: 'both' },
+  { id: 'transferencia', name: 'Transferencia bancaria', description: 'A cuenta corriente o de ahorro', icon: Building2, currency: 'VES' },
   { id: 'zelle', name: 'Zelle', description: 'Transferencia en dólares', icon: DollarSign, currency: 'USD' },
   { id: 'divisas', name: 'Divisas en efectivo', description: 'Entrega de USD/EUR al recibir', icon: Banknote, currency: 'USD' },
 ]

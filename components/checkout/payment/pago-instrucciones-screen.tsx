@@ -6,9 +6,11 @@ import { cn } from '@/lib/utils'
 
 interface PagoInstruccionesScreenProps {
   methodId: string
+  total?: number
+  formatPrice?: (amount: number) => string
 }
 
-export function PagoInstruccionesScreen({ methodId }: PagoInstruccionesScreenProps) {
+export function PagoInstruccionesScreen({ methodId, total = 0, formatPrice }: PagoInstruccionesScreenProps) {
   const [copiedField, setCopiedField] = useState<string | null>(null)
   const [tooltipField, setTooltipField] = useState<string | null>(null)
   const containerRef = useRef<HTMLDivElement>(null)
@@ -75,6 +77,38 @@ export function PagoInstruccionesScreen({ methodId }: PagoInstruccionesScreenPro
         <h3 className="text-sm font-bold text-foreground">Instrucciones de pago</h3>
       </div>
       <div className="space-y-3">
+        {/* Monto a pagar — always first and highlighted */}
+        {total > 0 && formatPrice && (
+          <div className="flex items-center justify-between p-3 rounded-xl bg-primary/5 border border-primary/20 shadow-xs">
+            <div>
+              <p className="text-[10px] font-semibold text-primary uppercase tracking-wider">Monto a pagar</p>
+              <p className="text-base font-bold text-primary mt-0.5">{formatPrice(total)}</p>
+            </div>
+            <div className="relative">
+              {tooltipField === '__total' && (
+                <div className="absolute -top-9 right-0 bg-foreground text-background text-[11px] font-bold px-2.5 py-1.5 rounded-lg whitespace-nowrap animate-fade-down shadow-md">
+                  ¡Copiado! ✓
+                  <div className="absolute -bottom-1 right-3 w-2 h-2 bg-foreground rotate-45" />
+                </div>
+              )}
+              <button
+                onClick={() => handleCopy(formatPrice(total), '__total')}
+                className={cn(
+                  "p-2 rounded-lg transition-all",
+                  copiedField === '__total'
+                    ? "bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600"
+                    : "hover:bg-primary/10 text-primary"
+                )}
+              >
+                {copiedField === '__total'
+                  ? <CheckCircle2 className="h-4 w-4" />
+                  : <Copy className="h-4 w-4" />
+                }
+              </button>
+            </div>
+          </div>
+        )}
+
         {instructions.map((item) => (
           <div key={item.label} className="flex items-center justify-between p-3 rounded-xl bg-card border border-border shadow-xs">
             <div>
