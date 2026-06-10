@@ -86,6 +86,9 @@ export function LocalDelivery({ onComplete }: LocalDeliveryProps) {
           ¿En qué ciudad te encuentras?
         </label>
         <CitySelector onSelect={handleCitySelect} selected={selectedCity} />
+        <p className="text-[11px] text-muted-foreground leading-snug px-1">
+          Si no ves tu ciudad en la lista, significa que nuestro servicio de delivery local no está disponible allí. Puedes elegir <span className="font-semibold text-foreground">Envío Nacional</span> en el menú anterior.
+        </p>
         {showErrors && !selectedCity && (
           <p className="text-xs font-medium text-destructive mt-1 animate-fade-in">Falta seleccionar tu ciudad</p>
         )}
@@ -106,6 +109,11 @@ export function LocalDelivery({ onComplete }: LocalDeliveryProps) {
             ¿En qué zona?
           </label>
           {selectedCity && <ZoneSelector cityId={selectedCity} onSelect={handleZoneSelect} selected={selectedZone} />}
+          {selectedCity && (
+            <p className="text-[11px] text-muted-foreground leading-snug px-1 mt-1">
+              Si tu zona exacta no aparece, es porque se encuentra fuera de nuestro radio de cobertura actual.
+            </p>
+          )}
           {showErrors && selectedCity && !selectedZone && (
             <p className="text-xs font-medium text-destructive mt-1 animate-fade-in">Falta seleccionar la zona de entrega</p>
           )}
