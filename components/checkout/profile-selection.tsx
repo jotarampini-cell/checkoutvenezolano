@@ -6,6 +6,14 @@ import { CustomerInfoForm } from './customer-info-form'
 import { getProfileByPhone, type CustomerInfo } from '@/lib/mock-profiles'
 import { cn } from '@/lib/utils'
 
+const VE_PREFIXES = [
+  { value: '0412', label: '0412', carrier: 'Digitel' },
+  { value: '0414', label: '0414', carrier: 'Movistar' },
+  { value: '0416', label: '0416', carrier: 'Movistar' },
+  { value: '0424', label: '0424', carrier: 'Movilnet' },
+  { value: '0426', label: '0426', carrier: 'Movilnet' },
+]
+
 interface ProfileSelectionProps {
   onComplete: (data: CustomerInfo) => void
   onBack?: () => void
@@ -77,7 +85,8 @@ function OTPInput({ value, onChange, error }: { value: string; onChange: (v: str
 
 export function ProfileSelection({ onComplete }: ProfileSelectionProps) {
   const [showVerificationModal, setShowVerificationModal] = useState(false)
-  const [verifyPhone, setVerifyPhone] = useState('')
+  const [verifyPrefix, setVerifyPrefix] = useState('0414')
+  const [verifySuffix, setVerifySuffix] = useState('')
   const [verifyCode, setVerifyCode] = useState('')
   const [verifyStep, setVerifyStep] = useState<'phone' | 'code'>('phone')
   const [verifyError, setVerifyError] = useState('')
@@ -85,9 +94,12 @@ export function ProfileSelection({ onComplete }: ProfileSelectionProps) {
   const [prefilledData, setPrefilledData] = useState<CustomerInfo | null>(null)
   const [verifiedName, setVerifiedName] = useState<string | null>(null)
 
+  // Full phone number for lookup
+  const verifyPhone = verifySuffix ? `${verifyPrefix}${verifySuffix}` : ''
+
   const handleSendCode = async () => {
-    if (verifyPhone.length < 10) {
-      setVerifyError('Ingresa un número válido')
+    if (verifySuffix.length < 7) {
+      setVerifyError('Ingresa los 7 dígitos del número')
       return
     }
     setVerifyError('')
@@ -120,10 +132,11 @@ export function ProfileSelection({ onComplete }: ProfileSelectionProps) {
 
     if (profile) {
       setPrefilledData(profile)
-      setVerifiedName(profile.name.split(' ')[0]) // First name only
+      setVerifiedName(profile.name.split(' ')[0])
       setShowVerificationModal(false)
       setVerifyStep('phone')
-      setVerifyPhone('')
+      setVerifyPrefix('0414')
+      setVerifySuffix('')
       setVerifyCode('')
     } else {
       setVerifyError('Código incorrecto o expirado')
@@ -215,25 +228,50 @@ export function ProfileSelection({ onComplete }: ProfileSelectionProps) {
 
             {verifyStep === 'phone' ? (
               <div className="space-y-4">
-                <div className="floating-label-group">
-                  <input
-                    type="tel"
-                    inputMode="tel"
-                    placeholder=" "
-                    className={cn("input-premium", verifyPhone && "has-value", verifyError && "error")}
-                    value={verifyPhone}
-                    onChange={(e) => {
-                      setVerifyPhone(e.target.value)
-                      setVerifyError('')
-                    }}
-                  />
-                  <label>Número de WhatsApp</label>
+                {/* Carrier prefix + suffix — same pattern as main form */}
+                <div className="space-y-1.5">
+                  <label className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
+                    Número de WhatsApp
+                  </label>
+                  <div className="flex gap-2">
+                    <select
+                      value={verifyPrefix}
+                      onChange={(e) => { setVerifyPrefix(e.target.value); setVerifyError('') }}
+                      className="select-premium !w-[100px] font-bold text-sm"
+                    >
+                      {VE_PREFIXES.map(p => (
+                        <option key={p.value} value={p.value}>{p.value}</option>
+                      ))}
+                    </select>
+                    <input
+                      type="tel"
+                      inputMode="numeric"
+                      placeholder="000 0000"
+                      maxLength={7}
+                      className={cn(
+                        "input-premium flex-1 tracking-wider",
+                        verifySuffix && "has-value",
+                        verifyError && "error"
+                      )}
+                      value={verifySuffix}
+                      onChange={(e) => {
+                        setVerifySuffix(e.target.value.replace(/\D/g, '').slice(0, 7))
+                        setVerifyError('')
+                      }}
+                    />
+                  </div>
+                  <p className="text-[11px] text-muted-foreground">
+                    {VE_PREFIXES.find(p => p.value === verifyPrefix)?.carrier} · {verifyPrefix}
+                    {verifySuffix.length > 0 && verifySuffix.length < 7 && (
+                      <span className="ml-2 font-bold text-primary">{7 - verifySuffix.length} dígitos más</span>
+                    )}
+                  </p>
                 </div>
                 {verifyError && <p className="text-xs text-destructive">{verifyError}</p>}
 
                 <button
                   onClick={handleSendCode}
-                  disabled={loading || !verifyPhone}
+                  disabled={loading || verifySuffix.length < 7}
                   className="btn-primary w-full"
                 >
                   {loading ? <div className="spinner" /> : "Enviar código"}

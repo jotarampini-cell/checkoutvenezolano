@@ -109,34 +109,38 @@ export function CustomerInfoForm({ onComplete, initialData }: CustomerInfoFormPr
     phone: '',
     email: '',
   })
-  const [phonePrefix, setPhonePrefix] = useState('0414') // default Movistar
+  const [phonePrefix, setPhonePrefix] = useState('0414')
   const [phoneSuffix, setPhoneSuffix] = useState('')
   const [touched, setTouched] = useState<TouchedFields>({})
 
+  // Helper: build combined phone string
+  const buildPhone = (prefix: string, suffix: string) =>
+    suffix ? `${prefix}-${suffix}` : ''
+
   useEffect(() => {
     if (initialData) {
-      setFormData(initialData)
-      // If we have a stored phone, split it back
+      // Parse the phone first so we can set everything in one consistent state update
+      let prefix = '0414'
+      let suffix = ''
       if (initialData.phone) {
-        const raw = initialData.phone.replace(/\D/g, '')
-        const prefix = VE_PREFIXES.find(p => raw.startsWith(p.value.replace(/\D/g,'')))?.value || '0414'
-        setPhonePrefix(prefix)
-        setPhoneSuffix(raw.slice(4, 11))
+        const raw = initialData.phone.replace(/\D/g, '') // strip dashes / spaces
+        const found = VE_PREFIXES.find(p => raw.startsWith(p.value.replace(/\D/g, '')))
+        prefix = found?.value ?? '0414'
+        suffix = raw.slice(4) // everything after the 4-digit prefix
       }
+
+      setPhonePrefix(prefix)
+      setPhoneSuffix(suffix)
+      // Set formData with the correctly rebuilt phone in one shot — no race
+      setFormData({
+        ...initialData,
+        phone: buildPhone(prefix, suffix),
+      })
       const t: TouchedFields = {}
       Object.entries(initialData).forEach(([k, v]) => { if (v) t[k] = true })
       setTouched(t)
     }
   }, [initialData])
-
-  // Keep formData.phone in sync with prefix+suffix
-  useEffect(() => {
-    const combined = phoneSuffix ? `${phonePrefix}-${phoneSuffix}` : ''
-    setFormData(prev => ({ ...prev, phone: combined }))
-    if (phoneSuffix && !touched.phone) {
-      setTouched(prev => ({ ...prev, phone: true }))
-    }
-  }, [phonePrefix, phoneSuffix])
 
   const handleChange = (field: keyof CustomerInfo, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }))
@@ -261,7 +265,11 @@ export function CustomerInfoForm({ onComplete, initialData }: CustomerInfoFormPr
             <div className="relative shrink-0">
               <select
                 value={phonePrefix}
-                onChange={(e) => setPhonePrefix(e.target.value)}
+                onChange={(e) => {
+                  const newPrefix = e.target.value
+                  setPhonePrefix(newPrefix)
+                  setFormData(prev => ({ ...prev, phone: buildPhone(newPrefix, phoneSuffix) }))
+                }}
                 className="select-premium !w-[100px] font-bold text-sm appearance-none pr-7"
               >
                 {VE_PREFIXES.map(p => (
@@ -288,6 +296,10 @@ export function CustomerInfoForm({ onComplete, initialData }: CustomerInfoFormPr
                 onChange={(e) => {
                   const digits = e.target.value.replace(/\D/g, '').slice(0, 7)
                   setPhoneSuffix(digits)
+                  setFormData(prev => ({ ...prev, phone: buildPhone(phonePrefix, digits) }))
+                  if (digits && !touched.phone) {
+                    setTouched(prev => ({ ...prev, phone: true }))
+                  }
                 }}
                 onBlur={() => handleBlur('phone')}
               />
