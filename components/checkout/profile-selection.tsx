@@ -1,7 +1,7 @@
 'use client'
 
-import { useState } from 'react'
-import { Shield, MessageCircle, X } from 'lucide-react'
+import { useState, useRef } from 'react'
+import { Shield, MessageCircle, X, CheckCircle2 } from 'lucide-react'
 import { CustomerInfoForm } from './customer-info-form'
 import { getProfileByPhone, type CustomerInfo } from '@/lib/mock-profiles'
 import { cn } from '@/lib/utils'
@@ -11,6 +11,70 @@ interface ProfileSelectionProps {
   onBack?: () => void
 }
 
+// OTP input with 4 separate boxes
+function OTPInput({ value, onChange, error }: { value: string; onChange: (v: string) => void; error?: string }) {
+  const inputs = useRef<(HTMLInputElement | null)[]>([])
+  const digits = value.split('').slice(0, 4)
+
+  const handleKey = (index: number, e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Backspace') {
+      const newDigits = [...digits]
+      if (newDigits[index]) {
+        newDigits[index] = ''
+        onChange(newDigits.join(''))
+      } else if (index > 0) {
+        newDigits[index - 1] = ''
+        onChange(newDigits.join(''))
+        inputs.current[index - 1]?.focus()
+      }
+    }
+  }
+
+  const handleChange = (index: number, val: string) => {
+    const digit = val.replace(/\D/g, '').slice(-1)
+    const newDigits = [...digits]
+    newDigits[index] = digit
+    const newValue = newDigits.join('')
+    onChange(newValue)
+    if (digit && index < 3) {
+      inputs.current[index + 1]?.focus()
+    }
+  }
+
+  const handlePaste = (e: React.ClipboardEvent) => {
+    e.preventDefault()
+    const pasted = e.clipboardData.getData('text').replace(/\D/g, '').slice(0, 4)
+    onChange(pasted)
+    inputs.current[Math.min(pasted.length, 3)]?.focus()
+  }
+
+  return (
+    <div className="space-y-2">
+      <div className="flex gap-3 justify-center">
+        {[0, 1, 2, 3].map((i) => (
+          <input
+            key={i}
+            ref={el => { inputs.current[i] = el }}
+            type="text"
+            inputMode="numeric"
+            maxLength={1}
+            value={digits[i] || ''}
+            onChange={(e) => handleChange(i, e.target.value)}
+            onKeyDown={(e) => handleKey(i, e)}
+            onPaste={handlePaste}
+            className={cn(
+              "otp-input",
+              digits[i] && "filled",
+              error && "!border-destructive"
+            )}
+          />
+        ))}
+      </div>
+      {error && <p className="text-xs text-destructive text-center">{error}</p>}
+    </div>
+  )
+}
+
 export function ProfileSelection({ onComplete }: ProfileSelectionProps) {
   const [showVerificationModal, setShowVerificationModal] = useState(false)
   const [verifyPhone, setVerifyPhone] = useState('')
@@ -18,9 +82,8 @@ export function ProfileSelection({ onComplete }: ProfileSelectionProps) {
   const [verifyStep, setVerifyStep] = useState<'phone' | 'code'>('phone')
   const [verifyError, setVerifyError] = useState('')
   const [loading, setLoading] = useState(false)
-
-  // This will be passed to CustomerInfoForm if verification succeeds
   const [prefilledData, setPrefilledData] = useState<CustomerInfo | null>(null)
+  const [verifiedName, setVerifiedName] = useState<string | null>(null)
 
   const handleSendCode = async () => {
     if (verifyPhone.length < 10) {
@@ -29,7 +92,6 @@ export function ProfileSelection({ onComplete }: ProfileSelectionProps) {
     }
     setVerifyError('')
     setLoading(true)
-    // Simulate API delay
     await new Promise(r => setTimeout(r, 1000))
     setLoading(false)
     setVerifyStep('code')
@@ -42,27 +104,24 @@ export function ProfileSelection({ onComplete }: ProfileSelectionProps) {
     }
     setVerifyError('')
     setLoading(true)
-    
-    // Simulate API delay
     await new Promise(r => setTimeout(r, 1000))
-    
+
     let profile = getProfileByPhone(verifyPhone)
-    
-    // Bypass for testing
+
     if (verifyCode === '1234') {
       profile = {
-        name: 'Usuario Verificado',
+        name: 'Carlos Rodríguez',
         idType: 'V',
         idNumber: '12345678',
         phone: verifyPhone || '04141234567',
-        email: 'usuario@prueba.com'
+        email: 'carlos@prueba.com'
       }
     }
 
     if (profile) {
       setPrefilledData(profile)
+      setVerifiedName(profile.name.split(' ')[0]) // First name only
       setShowVerificationModal(false)
-      // Reset state for future
       setVerifyStep('phone')
       setVerifyPhone('')
       setVerifyCode('')
@@ -70,6 +129,12 @@ export function ProfileSelection({ onComplete }: ProfileSelectionProps) {
       setVerifyError('Código incorrecto o expirado')
     }
     setLoading(false)
+  }
+
+  // Auto-verify when 4 digits entered
+  const handleCodeChange = (code: string) => {
+    setVerifyCode(code)
+    setVerifyError('')
   }
 
   return (
@@ -81,7 +146,7 @@ export function ProfileSelection({ onComplete }: ProfileSelectionProps) {
             <h3 className="text-sm font-bold text-foreground">¿Ya tienes cuenta?</h3>
             <p className="text-xs text-muted-foreground mt-0.5">Verifica tu número y precarga tus datos guardados.</p>
           </div>
-          <button 
+          <button
             onClick={() => setShowVerificationModal(true)}
             className="btn-ghost bg-primary/10 text-primary hover:bg-primary/20 whitespace-nowrap self-start sm:self-auto"
           >
@@ -91,23 +156,29 @@ export function ProfileSelection({ onComplete }: ProfileSelectionProps) {
         </div>
       )}
 
-      {prefilledData && (
-        <div className="rounded-xl bg-success/10 border border-success/20 p-4 animate-fade-down flex items-start gap-3">
-          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-success/20 text-success shrink-0">
-             <Shield className="h-4 w-4" />
+      {/* Personalized welcome banner */}
+      {prefilledData && verifiedName && (
+        <div className="rounded-xl bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 p-4 animate-fade-down flex items-center gap-3">
+          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-emerald-500 text-white shrink-0 text-lg">
+            {verifiedName[0]}
           </div>
           <div>
-            <p className="text-sm font-bold text-success">Cuenta verificada</p>
-            <p className="text-xs text-success/80 mt-0.5">Tus datos han sido precargados de forma segura.</p>
+            <p className="text-sm font-bold text-emerald-700 dark:text-emerald-400">
+              ¡Bienvenido de nuevo, {verifiedName}! 👋
+            </p>
+            <p className="text-xs text-emerald-600 dark:text-emerald-500 mt-0.5">
+              Tus datos fueron precargados desde tu cuenta verificada.
+            </p>
           </div>
+          <CheckCircle2 className="h-5 w-5 text-emerald-500 shrink-0 ml-auto" />
         </div>
       )}
 
       {/* Main Data Form */}
       <div>
-        <CustomerInfoForm 
-          initialData={prefilledData} 
-          onComplete={onComplete} 
+        <CustomerInfoForm
+          initialData={prefilledData}
+          onComplete={onComplete}
         />
       </div>
 
@@ -122,19 +193,24 @@ export function ProfileSelection({ onComplete }: ProfileSelectionProps) {
       {showVerificationModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-background/80 backdrop-blur-sm animate-fade-in">
           <div className="w-full max-w-sm rounded-2xl bg-card p-6 shadow-xl border border-border animate-scale-in relative">
-            <button 
+            <button
               onClick={() => setShowVerificationModal(false)}
               className="absolute top-4 right-4 p-1 rounded-full hover:bg-muted text-muted-foreground transition-colors"
             >
               <X className="h-5 w-5" />
             </button>
-            
+
             <div className="mb-6 flex flex-col items-center text-center">
               <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10 text-primary mb-3">
                 <MessageCircle className="h-6 w-6" />
               </div>
               <h2 className="text-lg font-bold">Verificación rápida</h2>
-              <p className="text-sm text-muted-foreground mt-1">Te enviaremos un código por WhatsApp</p>
+              <p className="text-sm text-muted-foreground mt-1">
+                {verifyStep === 'phone'
+                  ? 'Te enviaremos un código por WhatsApp'
+                  : `Código enviado al ${verifyPhone}`
+                }
+              </p>
             </div>
 
             {verifyStep === 'phone' ? (
@@ -154,8 +230,8 @@ export function ProfileSelection({ onComplete }: ProfileSelectionProps) {
                   <label>Número de WhatsApp</label>
                 </div>
                 {verifyError && <p className="text-xs text-destructive">{verifyError}</p>}
-                
-                <button 
+
+                <button
                   onClick={handleSendCode}
                   disabled={loading || !verifyPhone}
                   className="btn-primary w-full"
@@ -164,43 +240,30 @@ export function ProfileSelection({ onComplete }: ProfileSelectionProps) {
                 </button>
               </div>
             ) : (
-              <div className="space-y-4">
-                <p className="text-sm text-center text-foreground font-medium">
-                  Enviado al {verifyPhone}
-                </p>
-                <div className="floating-label-group">
-                  <input
-                    type="text"
-                    inputMode="numeric"
-                    placeholder=" "
-                    className={cn("input-premium text-center tracking-widest text-lg font-bold", verifyCode && "has-value", verifyError && "error")}
-                    value={verifyCode}
-                    onChange={(e) => {
-                      setVerifyCode(e.target.value)
-                      setVerifyError('')
-                    }}
-                    maxLength={6}
-                  />
-                  <label className="text-center w-full left-0">Código de 4 dígitos</label>
-                </div>
-                {verifyError && <p className="text-xs text-destructive">{verifyError}</p>}
-                
-                <button 
+              <div className="space-y-5">
+                {/* 4-box OTP */}
+                <OTPInput
+                  value={verifyCode}
+                  onChange={handleCodeChange}
+                  error={verifyError}
+                />
+
+                <button
                   onClick={handleVerifyCode}
                   disabled={loading || verifyCode.length < 4}
                   className="btn-primary w-full"
                 >
                   {loading ? <div className="spinner" /> : "Verificar y continuar"}
                 </button>
-                <button 
+                <button
                   onClick={() => setVerifyStep('phone')}
-                  className="w-full text-xs text-muted-foreground font-medium hover:text-primary transition-colors text-center mt-2"
+                  className="w-full text-xs text-muted-foreground font-medium hover:text-primary transition-colors text-center"
                 >
                   Cambiar número
                 </button>
               </div>
             )}
-            
+
             <div className="mt-4 rounded-lg bg-blue-50 border border-blue-100 p-3 text-xs text-blue-800">
               <span className="font-bold">Para probar:</span> Usa cualquier teléfono y el código <span className="font-mono bg-white px-1 py-0.5 rounded border border-blue-200">1234</span>
             </div>

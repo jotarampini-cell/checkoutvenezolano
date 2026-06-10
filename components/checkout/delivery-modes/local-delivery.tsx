@@ -14,6 +14,7 @@ export function LocalDelivery({ onComplete }: LocalDeliveryProps) {
   const [selectedZone, setSelectedZone] = useState<string | null>(null)
   const [location, setLocation] = useState<{ lat: number; lng: number; address: string } | null>(null)
   const [cost, setCost] = useState<number | null>(null)
+  const [reference, setReference] = useState('')
 
   const getZoneCost = (zone: string | null) => {
     if (!zone) return null
@@ -24,7 +25,7 @@ export function LocalDelivery({ onComplete }: LocalDeliveryProps) {
     if (low.includes(zone)) return 2
     if (mid.includes(zone)) return 4
     if (high.includes(zone)) return 5
-    return 6 // Macaracuay and others
+    return 6
   }
 
   const handleZoneSelect = (zone: string) => {
@@ -41,6 +42,7 @@ export function LocalDelivery({ onComplete }: LocalDeliveryProps) {
       mode: 'local',
       zone: selectedZone,
       location,
+      reference,
       shippingCost: cost,
       eta: '30-45 minutos',
     })
@@ -88,11 +90,6 @@ export function LocalDelivery({ onComplete }: LocalDeliveryProps) {
             
             <div className="divider my-2" />
             
-            <div className="flex justify-between items-center text-sm font-medium">
-              <span className="text-muted-foreground">Costo de delivery</span>
-              <span className="text-foreground">${cost}</span>
-            </div>
-            
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2 text-sm text-muted-foreground">
                 <Clock className="h-4 w-4" />
@@ -108,6 +105,21 @@ export function LocalDelivery({ onComplete }: LocalDeliveryProps) {
               </div>
               <span className="font-bold text-primary text-sm">${cost.toLocaleString()}</span>
             </div>
+          </div>
+
+          {/* Reference / Landmark field */}
+          <div className="space-y-1.5">
+            <label className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider ml-1 flex items-center gap-1.5">
+              <Navigation className="h-3 w-3" /> Punto de referencia
+            </label>
+            <input
+              type="text"
+              placeholder="Ej: Torre azul, piso 3, frente al Metro..."
+              className="input-premium"
+              value={reference}
+              onChange={(e) => setReference(e.target.value)}
+            />
+            <p className="text-[11px] text-muted-foreground ml-1">Ayuda al repartidor a encontrarte más rápido</p>
           </div>
 
           <button

@@ -1,5 +1,6 @@
 'use client'
 
+import { useState } from 'react'
 import { ShoppingBag, Tag } from 'lucide-react'
 import { CartItemList, CartItem } from './cart-item-list'
 import { cn } from '@/lib/utils'
@@ -32,6 +33,12 @@ export function OrderSummary({
   onRemoveItem
 }: OrderSummaryProps) {
   const EXCHANGE_RATE = 567.68
+  const [priceKey, setPriceKey] = useState(0)
+
+  const handleCurrencyChange = (c: 'USD' | 'VES') => {
+    setPriceKey(k => k + 1)
+    onCurrencyChange?.(c)
+  }
 
   const formatPrice = (amountInUsd: number) => {
     if (currency === 'VES') {
@@ -66,13 +73,13 @@ export function OrderSummary({
       <div className="bg-muted/50 p-1.5 mx-6 mt-4 rounded-lg flex flex-col gap-1.5">
         <div className="flex items-center justify-between">
           <button 
-            onClick={() => onCurrencyChange?.('USD')}
+            onClick={() => handleCurrencyChange('USD')}
             className={cn("flex-1 text-xs font-bold py-1.5 rounded-md transition-colors", currency === 'USD' ? "bg-background shadow-sm text-foreground" : "text-muted-foreground hover:text-foreground")}
           >
             USD $
           </button>
           <button 
-            onClick={() => onCurrencyChange?.('VES')}
+            onClick={() => handleCurrencyChange('VES')}
             className={cn("flex-1 text-xs font-bold py-1.5 rounded-md transition-colors", currency === 'VES' ? "bg-background shadow-sm text-foreground" : "text-muted-foreground hover:text-foreground")}
           >
             VES Bs
@@ -111,18 +118,16 @@ export function OrderSummary({
           </button>
         </div>
 
-        <div className="divider my-6" />
-
         {/* Totals */}
         <div className="space-y-4 bg-muted/30 p-4 rounded-xl border border-border">
           <div className="flex justify-between text-sm">
             <span className="text-muted-foreground">Subtotal</span>
-            <span className="font-medium text-foreground">{formatPrice(subtotal)}</span>
+            <span key={`subtotal-${priceKey}`} className="font-medium text-foreground price-flip">{formatPrice(subtotal)}</span>
           </div>
           
           <div className="flex justify-between text-sm">
             <span className="text-muted-foreground">Envío {orderData?.mode ? `(${orderData.mode})` : ''}</span>
-            <span className="font-medium text-foreground">
+            <span key={`shipping-${priceKey}`} className="font-medium text-foreground price-flip">
               {shippingCost > 0 
                 ? formatPrice(shippingCost) 
                 : (orderData?.mode === 'national' 
@@ -141,8 +146,8 @@ export function OrderSummary({
           <div className="flex justify-between items-end">
             <span className="text-base font-bold text-foreground">Total a pagar</span>
             <div className="text-right">
-              <span className="text-2xl font-bold text-primary leading-none">{formatPrice(total)}</span>
-              <p className="text-[11px] text-muted-foreground mt-1.5 text-right font-medium">Tasa BCV referencial: Bs. 36.5</p>
+              <span key={`total-${priceKey}`} className="text-2xl font-bold text-primary leading-none price-flip">{formatPrice(total)}</span>
+              <p className="text-[11px] text-muted-foreground mt-1.5 text-right font-medium">Tasa BCV: Bs. {EXCHANGE_RATE.toLocaleString('es-VE')} / USD</p>
             </div>
           </div>
         </div>

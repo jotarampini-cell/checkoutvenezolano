@@ -254,6 +254,43 @@ body {
 .step-enter-back    { animation: step-slide-in-back    0.45s cubic-bezier(0.22, 1, 0.36, 1) both; }
 .field-success-icon { animation: field-success-pop 0.35s cubic-bezier(0.22, 1, 0.36, 1); }
 
+/* Currency flip animation */
+@keyframes price-flip-out {
+  0%   { opacity: 1; transform: translateY(0) scale(1); }
+  100% { opacity: 0; transform: translateY(-8px) scale(0.95); }
+}
+@keyframes price-flip-in {
+  0%   { opacity: 0; transform: translateY(8px) scale(0.95); }
+  100% { opacity: 1; transform: translateY(0) scale(1); }
+}
+.price-flip { animation: price-flip-in 0.28s cubic-bezier(0.22, 1, 0.36, 1) both; }
+
+/* Verification OTP boxes */
+.otp-input {
+  width: 52px;
+  height: 60px;
+  text-align: center;
+  font-size: 24px;
+  font-weight: 800;
+  letter-spacing: 0;
+  border: 2px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--card);
+  color: var(--foreground);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  caret-color: var(--primary);
+  outline: none;
+}
+.otp-input:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px oklch(48% 0.18 260 / 0.15);
+  transform: scale(1.05);
+}
+.otp-input.filled {
+  border-color: var(--primary);
+  background: oklch(97% 0.015 260);
+}
+
 /* ============================================
    PREMIUM CARD SYSTEM
    ============================================ */
