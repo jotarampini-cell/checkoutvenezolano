@@ -108,8 +108,6 @@ export function NationalShipping({ onComplete }: NationalShippingProps) {
               <span className="font-bold text-primary text-sm">Cobro a destino</span>
             </div>
           </div>
-
-          </div>
         </div>
       )}
 

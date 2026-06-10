@@ -129,8 +129,6 @@ export function PickupDelivery({ onComplete }: PickupDeliveryProps) {
               <span className="font-semibold text-foreground text-sm">Inmediato</span>
             </div>
           </div>
-
-          </div>
         </div>
       )}
 
