@@ -31,7 +31,20 @@ export function MapPicker({ onSelect }: MapPickerProps) {
     if (isDragging) {
       setIsDragging(false)
       setDragComplete(true)
-      setTimeout(() => setDragComplete(false), 3000)
+      
+      // Simulate reverse geocoding to auto-fill address
+      setTimeout(() => {
+        const mockAddresses = [
+          'Av. Francisco de Miranda, Edificio Centro Seguros, Piso 4',
+          'Calle Los Cedros, Qta. Santa María, La Florida',
+          'Av. Principal de Las Mercedes, Torre ABA',
+          'Residencias Los Pinos, Torre B, Apto 42'
+        ]
+        const randomAddress = mockAddresses[Math.floor(Math.random() * mockAddresses.length)]
+        setAddress(randomAddress)
+        
+        setTimeout(() => setDragComplete(false), 2500)
+      }, 500)
     }
   }
 

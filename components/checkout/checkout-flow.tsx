@@ -130,6 +130,16 @@ export function CheckoutFlow({ onComplete, availableModes = ['local', 'national'
           </div>
         </div>
       )}
+
+      {/* Fallback button if user clicks sticky Continuar while on this screen */}
+      <button 
+        id="submit-step-btn" 
+        className="hidden" 
+        onClick={() => {
+          // If they click the global continue without selecting a card
+          alert("Por favor selecciona un método de entrega")
+        }} 
+      />
     </div>
   )
 }

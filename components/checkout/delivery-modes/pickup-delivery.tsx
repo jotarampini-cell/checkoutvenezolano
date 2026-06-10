@@ -12,13 +12,19 @@ interface PickupDeliveryProps {
 export function PickupDelivery({ onComplete }: PickupDeliveryProps) {
   const [selectedStore, setSelectedStore] = useState<string | null>(null)
   const [paymentOption, setPaymentOption] = useState<'online' | 'store' | null>(null)
+  const [showErrors, setShowErrors] = useState(false)
 
   const handleStoreSelect = (store: string) => {
     setSelectedStore(store)
   }
 
   const handleConfirm = () => {
-    if (!selectedStore || !paymentOption) return
+    if (!selectedStore || !paymentOption) {
+      setShowErrors(true)
+      const firstError = document.querySelector('.error-highlight')
+      if (firstError) firstError.scrollIntoView({ behavior: 'smooth', block: 'center' })
+      return
+    }
     onComplete({
       mode: 'pickup',
       store: selectedStore,
@@ -31,25 +37,28 @@ export function PickupDelivery({ onComplete }: PickupDeliveryProps) {
 
   return (
     <div className="space-y-6">
-      <div className="space-y-3">
-        <label className="text-sm font-semibold text-foreground flex items-center gap-2">
+      <div className={cn("space-y-3 p-3 rounded-xl transition-all", showErrors && !selectedStore && "bg-destructive/5 ring-1 ring-destructive error-highlight")}>
+        <label className={cn("text-sm font-semibold flex items-center gap-2", showErrors && !selectedStore ? "text-destructive" : "text-foreground")}>
           {selectedStore ? (
             <CheckCircle2 className="h-4 w-4 text-success" />
           ) : (
-            <div className="flex h-5 w-5 items-center justify-center rounded-full bg-primary/20 text-[11px] font-bold text-primary">1</div>
+            <div className={cn("flex h-5 w-5 items-center justify-center rounded-full text-[11px] font-bold", showErrors && !selectedStore ? "bg-destructive/20 text-destructive" : "bg-primary/20 text-primary")}>1</div>
           )}
           Selecciona la tienda
         </label>
         <StoreSelector onSelect={handleStoreSelect} selected={selectedStore} />
+        {showErrors && !selectedStore && (
+          <p className="text-xs font-medium text-destructive mt-1 animate-fade-in">Falta seleccionar la tienda de retiro</p>
+        )}
       </div>
 
       <div className={cn("transition-all duration-500", selectedStore ? "opacity-100" : "opacity-40 pointer-events-none grayscale-[0.5]")}>
-        <div className="space-y-3 pt-2">
-          <label className="text-sm font-semibold text-foreground flex items-center gap-2">
+        <div className={cn("space-y-3 p-3 rounded-xl transition-all", showErrors && selectedStore && !paymentOption && "bg-destructive/5 ring-1 ring-destructive error-highlight")}>
+          <label className={cn("text-sm font-semibold flex items-center gap-2", showErrors && selectedStore && !paymentOption ? "text-destructive" : "text-foreground")}>
             {paymentOption ? (
               <CheckCircle2 className="h-4 w-4 text-success" />
             ) : (
-              <div className="flex h-5 w-5 items-center justify-center rounded-full bg-primary/20 text-[11px] font-bold text-primary">2</div>
+              <div className={cn("flex h-5 w-5 items-center justify-center rounded-full text-[11px] font-bold", showErrors && selectedStore && !paymentOption ? "bg-destructive/20 text-destructive" : "bg-primary/20 text-primary")}>2</div>
             )}
             ¿Cómo deseas pagar?
           </label>
@@ -92,6 +101,9 @@ export function PickupDelivery({ onComplete }: PickupDeliveryProps) {
               </div>
             </div>
           </div>
+          {showErrors && selectedStore && !paymentOption && (
+            <p className="text-xs font-medium text-destructive mt-1 animate-fade-in">Falta seleccionar el método de pago</p>
+          )}
         </div>
       </div>
 
@@ -118,15 +130,18 @@ export function PickupDelivery({ onComplete }: PickupDeliveryProps) {
             </div>
           </div>
 
-          <button
-            id="submit-step-btn"
-            onClick={handleConfirm}
-            className="hidden"
-          >
-            Continuar con este retiro
-          </button>
+          </div>
         </div>
       )}
+
+      {/* This button is permanently in the DOM so the sticky "Continuar" button always finds it */}
+      <button
+        id="submit-step-btn"
+        onClick={handleConfirm}
+        className="hidden"
+      >
+        Continuar con este retiro
+      </button>
     </div>
   )
 }

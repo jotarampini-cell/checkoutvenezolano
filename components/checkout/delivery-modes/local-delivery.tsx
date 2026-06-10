@@ -15,6 +15,7 @@ export function LocalDelivery({ onComplete }: LocalDeliveryProps) {
   const [location, setLocation] = useState<{ lat: number; lng: number; address: string } | null>(null)
   const [cost, setCost] = useState<number | null>(null)
   const [reference, setReference] = useState('')
+  const [showErrors, setShowErrors] = useState(false)
 
   const getZoneCost = (zone: string | null) => {
     if (!zone) return null
@@ -38,6 +39,17 @@ export function LocalDelivery({ onComplete }: LocalDeliveryProps) {
   }
 
   const handleConfirm = () => {
+    if (!selectedZone || !location) {
+      setShowErrors(true)
+      
+      // Auto-scroll to the first error
+      const firstError = document.querySelector('.error-highlight')
+      if (firstError) {
+        firstError.scrollIntoView({ behavior: 'smooth', block: 'center' })
+      }
+      return
+    }
+    
     onComplete({
       mode: 'local',
       zone: selectedZone,
@@ -50,29 +62,35 @@ export function LocalDelivery({ onComplete }: LocalDeliveryProps) {
 
   return (
     <div className="space-y-6">
-      <div className="space-y-3">
-        <label className="text-sm font-semibold text-foreground flex items-center gap-2">
+      <div className={cn("space-y-3 p-3 rounded-xl transition-all", showErrors && !selectedZone && "bg-destructive/5 ring-1 ring-destructive error-highlight")}>
+        <label className={cn("text-sm font-semibold flex items-center gap-2", showErrors && !selectedZone ? "text-destructive" : "text-foreground")}>
           {selectedZone ? (
             <CheckCircle2 className="h-4 w-4 text-success" />
           ) : (
-            <div className="flex h-5 w-5 items-center justify-center rounded-full bg-primary/20 text-[11px] font-bold text-primary">1</div>
+            <div className={cn("flex h-5 w-5 items-center justify-center rounded-full text-[11px] font-bold", showErrors && !selectedZone ? "bg-destructive/20 text-destructive" : "bg-primary/20 text-primary")}>1</div>
           )}
           ¿En qué zona te encuentras?
         </label>
         <ZoneSelector onSelect={handleZoneSelect} selected={selectedZone} />
+        {showErrors && !selectedZone && (
+          <p className="text-xs font-medium text-destructive mt-1 animate-fade-in">Falta seleccionar la zona de entrega</p>
+        )}
       </div>
 
       <div className={cn("transition-all duration-500", selectedZone ? "opacity-100" : "opacity-40 pointer-events-none grayscale-[0.5]")}>
-        <div className="space-y-3 pt-2">
-          <label className="text-sm font-semibold text-foreground flex items-center gap-2">
+        <div className={cn("space-y-3 p-3 rounded-xl transition-all", showErrors && selectedZone && !location && "bg-destructive/5 ring-1 ring-destructive error-highlight")}>
+          <label className={cn("text-sm font-semibold flex items-center gap-2", showErrors && selectedZone && !location ? "text-destructive" : "text-foreground")}>
             {location ? (
               <CheckCircle2 className="h-4 w-4 text-success" />
             ) : (
-              <div className="flex h-5 w-5 items-center justify-center rounded-full bg-primary/20 text-[11px] font-bold text-primary">2</div>
+              <div className={cn("flex h-5 w-5 items-center justify-center rounded-full text-[11px] font-bold", showErrors && selectedZone && !location ? "bg-destructive/20 text-destructive" : "bg-primary/20 text-primary")}>2</div>
             )}
             Confirma tu ubicación exacta
           </label>
           <MapPicker onSelect={handleLocationSelect} />
+          {showErrors && selectedZone && !location && (
+            <p className="text-xs font-medium text-destructive mt-1 animate-fade-in">Falta confirmar la dirección en el mapa</p>
+          )}
         </div>
       </div>
 
@@ -121,16 +139,17 @@ export function LocalDelivery({ onComplete }: LocalDeliveryProps) {
             />
             <p className="text-[11px] text-muted-foreground ml-1">Ayuda al repartidor a encontrarte más rápido</p>
           </div>
-
-          <button
-            id="submit-step-btn"
-            onClick={handleConfirm}
-            className="hidden"
-          >
-            Continuar con esta entrega
-          </button>
         </div>
       )}
+
+      {/* This button is permanently in the DOM so the sticky "Continuar" button always finds it */}
+      <button
+        id="submit-step-btn"
+        onClick={handleConfirm}
+        className="hidden"
+      >
+        Continuar con esta entrega
+      </button>
     </div>
   )
 }

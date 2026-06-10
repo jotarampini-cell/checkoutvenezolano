@@ -14,6 +14,7 @@ export function NationalShipping({ onComplete }: NationalShippingProps) {
   const [selectedTransport, setSelectedTransport] = useState<string | null>(null)
   const [locationData, setLocationData] = useState<{state: string; city: string; branch: string} | null>(null)
   const [cost, setCost] = useState<number | null>(null)
+  const [showErrors, setShowErrors] = useState(false)
 
   const handleTransportSelect = (transport: string) => {
     setSelectedTransport(transport)
@@ -25,7 +26,13 @@ export function NationalShipping({ onComplete }: NationalShippingProps) {
   }
 
   const handleConfirm = () => {
-    if (!locationData || !selectedTransport) return
+    if (!selectedTransport || !locationData) {
+      setShowErrors(true)
+      const firstError = document.querySelector('.error-highlight')
+      if (firstError) firstError.scrollIntoView({ behavior: 'smooth', block: 'center' })
+      return
+    }
+    
     onComplete({
       mode: 'national',
       transport: selectedTransport,
@@ -39,29 +46,35 @@ export function NationalShipping({ onComplete }: NationalShippingProps) {
 
   return (
     <div className="space-y-6">
-      <div className="space-y-3">
-        <label className="text-sm font-semibold text-foreground flex items-center gap-2">
+      <div className={cn("space-y-3 p-3 rounded-xl transition-all", showErrors && !selectedTransport && "bg-destructive/5 ring-1 ring-destructive error-highlight")}>
+        <label className={cn("text-sm font-semibold flex items-center gap-2", showErrors && !selectedTransport ? "text-destructive" : "text-foreground")}>
           {selectedTransport ? (
             <CheckCircle2 className="h-4 w-4 text-success" />
           ) : (
-            <div className="flex h-5 w-5 items-center justify-center rounded-full bg-primary/20 text-[11px] font-bold text-primary">1</div>
+            <div className={cn("flex h-5 w-5 items-center justify-center rounded-full text-[11px] font-bold", showErrors && !selectedTransport ? "bg-destructive/20 text-destructive" : "bg-primary/20 text-primary")}>1</div>
           )}
           Elige empresa de transporte
         </label>
         <TransportSelector onSelect={handleTransportSelect} selected={selectedTransport} />
+        {showErrors && !selectedTransport && (
+          <p className="text-xs font-medium text-destructive mt-1 animate-fade-in">Falta seleccionar la empresa de transporte</p>
+        )}
       </div>
 
       <div className={cn("transition-all duration-500", selectedTransport ? "opacity-100" : "opacity-40 pointer-events-none grayscale-[0.5]")}>
-        <div className="space-y-3 pt-2">
-          <label className="text-sm font-semibold text-foreground flex items-center gap-2">
+        <div className={cn("space-y-3 p-3 rounded-xl transition-all", showErrors && selectedTransport && !locationData && "bg-destructive/5 ring-1 ring-destructive error-highlight")}>
+          <label className={cn("text-sm font-semibold flex items-center gap-2", showErrors && selectedTransport && !locationData ? "text-destructive" : "text-foreground")}>
             {locationData ? (
               <CheckCircle2 className="h-4 w-4 text-success" />
             ) : (
-              <div className="flex h-5 w-5 items-center justify-center rounded-full bg-primary/20 text-[11px] font-bold text-primary">2</div>
+              <div className={cn("flex h-5 w-5 items-center justify-center rounded-full text-[11px] font-bold", showErrors && selectedTransport && !locationData ? "bg-destructive/20 text-destructive" : "bg-primary/20 text-primary")}>2</div>
             )}
             Destino del envío
           </label>
           <LocationCascade onSelect={handleLocationSelect} transport={selectedTransport} />
+          {showErrors && selectedTransport && !locationData && (
+            <p className="text-xs font-medium text-destructive mt-1 animate-fade-in">Falta seleccionar el destino y la sucursal</p>
+          )}
         </div>
       </div>
 
@@ -96,15 +109,18 @@ export function NationalShipping({ onComplete }: NationalShippingProps) {
             </div>
           </div>
 
-          <button
-            id="submit-step-btn"
-            onClick={handleConfirm}
-            className="hidden"
-          >
-            Continuar con este envío
-          </button>
+          </div>
         </div>
       )}
+
+      {/* This button is permanently in the DOM so the sticky "Continuar" button always finds it */}
+      <button
+        id="submit-step-btn"
+        onClick={handleConfirm}
+        className="hidden"
+      >
+        Continuar con este envío
+      </button>
     </div>
   )
 }
