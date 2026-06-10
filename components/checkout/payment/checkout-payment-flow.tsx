@@ -10,11 +10,12 @@ interface CheckoutPaymentFlowProps {
   onComplete: (paymentData: any) => void
   onBack?: () => void
   currency?: 'USD' | 'VES'
+  setCurrency?: (c: 'USD' | 'VES') => void
   total?: number
   formatPrice?: (amount: number) => string
 }
 
-export function CheckoutPaymentFlow({ onComplete, currency = 'USD', total = 0, formatPrice }: CheckoutPaymentFlowProps) {
+export function CheckoutPaymentFlow({ onComplete, currency = 'USD', setCurrency, total = 0, formatPrice }: CheckoutPaymentFlowProps) {
   const [selectedMethod, setSelectedMethod] = useState<string | null>(null)
   const [showReportForm, setShowReportForm] = useState(false)
   const [isVerifying, setIsVerifying] = useState(false)
@@ -39,6 +40,7 @@ export function CheckoutPaymentFlow({ onComplete, currency = 'USD', total = 0, f
         }} 
         selected={selectedMethod} 
         currency={currency}
+        setCurrency={setCurrency}
       />
 
       {selectedMethod && showReportForm && (

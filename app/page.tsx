@@ -313,6 +313,7 @@ export default function CheckoutPage() {
                   onComplete={handlePaymentComplete} 
                   onBack={() => goToStep('datos', 'back')} 
                   currency={currency}
+                  setCurrency={setCurrency}
                   total={total}
                   formatPrice={formatPrice}
                 />

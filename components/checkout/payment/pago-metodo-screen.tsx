@@ -7,6 +7,7 @@ interface PagoMetodoScreenProps {
   onSelect: (method: string) => void
   selected?: string | null
   currency?: 'USD' | 'VES'
+  setCurrency?: (c: 'USD' | 'VES') => void
 }
 
 const PAYMENT_METHODS = [
@@ -16,13 +17,35 @@ const PAYMENT_METHODS = [
   { id: 'divisas', name: 'Divisas en efectivo', description: 'Entrega de USD/EUR al recibir', icon: Banknote, currency: 'USD' },
 ]
 
-export function PagoMetodoScreen({ onSelect, selected, currency = 'USD' }: PagoMetodoScreenProps) {
+export function PagoMetodoScreen({ onSelect, selected, currency = 'USD', setCurrency }: PagoMetodoScreenProps) {
   const availableMethods = PAYMENT_METHODS.filter(
     m => m.currency === 'both' || m.currency === currency || (!m.currency)
   )
 
   return (
     <div className="space-y-4">
+      {/* Inline Currency Toggle */}
+      <div className="bg-muted/50 p-1.5 rounded-xl flex items-center mb-6">
+        <button
+          onClick={() => setCurrency?.('USD')}
+          className={cn(
+            "flex-1 text-sm font-bold py-2 rounded-lg transition-all",
+            currency === 'USD' ? "bg-background shadow-sm text-foreground" : "text-muted-foreground hover:text-foreground"
+          )}
+        >
+          USD $
+        </button>
+        <button
+          onClick={() => setCurrency?.('VES')}
+          className={cn(
+            "flex-1 text-sm font-bold py-2 rounded-lg transition-all",
+            currency === 'VES' ? "bg-background shadow-sm text-foreground" : "text-muted-foreground hover:text-foreground"
+          )}
+        >
+          VES
+        </button>
+      </div>
+
       <div className="grid gap-3 sm:grid-cols-2">
         {availableMethods.map((method) => {
           const Icon = method.icon
