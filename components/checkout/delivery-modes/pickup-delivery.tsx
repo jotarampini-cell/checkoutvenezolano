@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { StoreSelector } from '../store-selector'
 import { Store, CreditCard, Wallet, Clock, CheckCircle2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
@@ -13,9 +13,14 @@ export function PickupDelivery({ onComplete }: PickupDeliveryProps) {
   const [selectedStore, setSelectedStore] = useState<string | null>(null)
   const [paymentOption, setPaymentOption] = useState<'online' | 'store' | null>(null)
   const [showErrors, setShowErrors] = useState(false)
+  const paymentSectionRef = useRef<HTMLDivElement>(null)
 
   const handleStoreSelect = (store: string) => {
     setSelectedStore(store)
+    // Auto-scroll to payment options
+    setTimeout(() => {
+      paymentSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    }, 150)
   }
 
   const handleConfirm = () => {
@@ -52,7 +57,10 @@ export function PickupDelivery({ onComplete }: PickupDeliveryProps) {
         )}
       </div>
 
-      <div className={cn("transition-all duration-500", selectedStore ? "opacity-100" : "opacity-40 pointer-events-none grayscale-[0.5]")}>
+      <div
+        ref={paymentSectionRef}
+        className={cn("transition-all duration-500 scroll-mt-4", selectedStore ? "opacity-100" : "opacity-40 pointer-events-none grayscale-[0.5]")}
+      >
         <div className={cn("space-y-3 p-3 rounded-xl transition-all", showErrors && selectedStore && !paymentOption && "bg-destructive/5 ring-1 ring-destructive error-highlight")}>
           <label className={cn("text-sm font-semibold flex items-center gap-2", showErrors && selectedStore && !paymentOption ? "text-destructive" : "text-foreground")}>
             {paymentOption ? (
