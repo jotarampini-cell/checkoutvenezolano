@@ -456,31 +456,19 @@ body {
   font-size: 15px;
   font-weight: 600;
   letter-spacing: 0.01em;
-  color: oklch(25% 0.05 250); /* Deep navy for contrast */
-  background: oklch(97% 0.02 240); /* Very light icy blue */
-  border: 1.5px solid #1abcfe;
+  color: oklch(25% 0.05 250);
+  background: white;
+  border: 2px solid #1abcfe;
   border-radius: var(--radius-xl);
-  box-shadow: 0 2px 8px oklch(26% 0.18 254 / 0.15), inset 0 2px 4px oklch(100% 0 0 / 0.5);
+  box-shadow: 0 2px 4px oklch(0% 0 0 / 0.04);
   cursor: pointer;
   transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
   position: relative;
-  overflow: hidden;
-}
-
-.btn-primary::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: #1abcfe;
-  opacity: 0;
-  transition: opacity 0.25s;
-  z-index: -1;
 }
 
 .btn-primary:hover {
-  color: white;
-  box-shadow: 0 4px 16px oklch(26% 0.18 254 / 0.25), var(--shadow-md);
-  transform: translateY(-1px);
+  box-shadow: 0 6px 20px rgba(26, 188, 254, 0.3), 0 2px 8px rgba(26, 188, 254, 0.15);
+  transform: translateY(-2px);
   border-color: #1abcfe;
 }
 
