@@ -24,7 +24,11 @@ export function PagoInstruccionesScreen({ methodId, total = 0, formatPrice }: Pa
   }, [])
 
   const handleCopy = (text: string, field: string) => {
-    navigator.clipboard.writeText(text)
+    // For the total amount, strip currency letters/symbols and copy just the number
+    const valueToCopy = field === '__total'
+      ? text.replace(/[^0-9.,]/g, '').trim()
+      : text
+    navigator.clipboard.writeText(valueToCopy)
     setCopiedField(field)
     setTooltipField(field)
     setTimeout(() => {
