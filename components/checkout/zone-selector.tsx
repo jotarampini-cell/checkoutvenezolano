@@ -1,24 +1,21 @@
 'use client'
 
+import { STORE_CONFIG } from '@/lib/store-config'
+
 interface ZoneSelectorProps {
-  onSelect: (zone: string) => void
+  cityId: string
+  onSelect: (zoneId: string) => void
   selected?: string | null
 }
 
-const ZONES = [
-  'Chacao',
-  'Altamira',
-  'Los Palos Grandes',
-  'Las Mercedes',
-  'El Rosal',
-  'Bello Monte',
-  'La Castellana',
-  'La Florida',
-  'Los Ruices',
-  'Macaracuay'
-]
+export function ZoneSelector({ cityId, onSelect, selected }: ZoneSelectorProps) {
+  const city = STORE_CONFIG.delivery.cities.find(c => c.id === cityId)
+  const zones = city?.zones || []
 
-export function ZoneSelector({ onSelect, selected }: ZoneSelectorProps) {
+  if (zones.length === 0) {
+    return null
+  }
+
   return (
     <div className="relative">
       <select 
@@ -27,8 +24,8 @@ export function ZoneSelector({ onSelect, selected }: ZoneSelectorProps) {
         onChange={(e) => onSelect(e.target.value)}
       >
         <option value="" disabled>Selecciona tu zona...</option>
-        {ZONES.map(zone => (
-          <option key={zone} value={zone}>{zone}</option>
+        {zones.map(zone => (
+          <option key={zone.id} value={zone.id}>{zone.name}</option>
         ))}
       </select>
     </div>

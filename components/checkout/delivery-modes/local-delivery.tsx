@@ -2,38 +2,46 @@
 
 import { useState, useRef } from 'react'
 import { MapPicker } from '../map-picker'
+import { CitySelector } from '../city-selector'
 import { ZoneSelector } from '../zone-selector'
 import { MapPin, Navigation, Clock, DollarSign, CheckCircle2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { STORE_CONFIG } from '@/lib/store-config'
 
 interface LocalDeliveryProps {
   onComplete: (data: any) => void
 }
 
 export function LocalDelivery({ onComplete }: LocalDeliveryProps) {
+  const [selectedCity, setSelectedCity] = useState<string | null>(null)
   const [selectedZone, setSelectedZone] = useState<string | null>(null)
   const [location, setLocation] = useState<{ lat: number; lng: number; address: string } | null>(null)
   const [cost, setCost] = useState<number | null>(null)
   const [reference, setReference] = useState('')
   const [showErrors, setShowErrors] = useState(false)
+  const zoneSectionRef = useRef<HTMLDivElement>(null)
   const mapSectionRef = useRef<HTMLDivElement>(null)
 
-  const getZoneCost = (zone: string | null) => {
-    if (!zone) return null
-    const low = ['Chacao', 'Altamira', 'Los Palos Grandes']
-    const mid = ['El Rosal', 'Bello Monte', 'Las Mercedes', 'La Castellana']
-    const high = ['La Florida', 'Los Ruices']
-    
-    if (low.includes(zone)) return 2
-    if (mid.includes(zone)) return 4
-    if (high.includes(zone)) return 5
-    return 6
+  const getZoneCost = (cityId: string | null, zoneId: string | null) => {
+    if (!cityId || !zoneId) return null
+    const city = STORE_CONFIG.delivery.cities.find(c => c.id === cityId)
+    const zone = city?.zones.find(z => z.id === zoneId)
+    return zone?.cost || null
   }
 
-  const handleZoneSelect = (zone: string) => {
-    setSelectedZone(zone)
-    setCost(getZoneCost(zone))
-    // Auto-scroll to map section after a short delay (let state re-render first)
+  const handleCitySelect = (cityId: string) => {
+    setSelectedCity(cityId)
+    setSelectedZone(null)
+    setCost(null)
+    setTimeout(() => {
+      zoneSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    }, 150)
+  }
+
+  const handleZoneSelect = (zoneId: string) => {
+    setSelectedZone(zoneId)
+    setCost(getZoneCost(selectedCity, zoneId))
+    // Auto-scroll to map section after a short delay
     setTimeout(() => {
       mapSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
     }, 150)
@@ -67,19 +75,41 @@ export function LocalDelivery({ onComplete }: LocalDeliveryProps) {
 
   return (
     <div className="space-y-6">
-      <div className={cn("space-y-3 p-3 rounded-xl transition-all", showErrors && !selectedZone && "bg-destructive/5 ring-1 ring-destructive error-highlight")}>
-        <label className={cn("text-sm font-semibold flex items-center gap-2", showErrors && !selectedZone ? "text-destructive" : "text-foreground")}>
-          {selectedZone ? (
+      {/* 1. Seleccionar Ciudad */}
+      <div className={cn("space-y-3 p-3 rounded-xl transition-all", showErrors && !selectedCity && "bg-destructive/5 ring-1 ring-destructive error-highlight")}>
+        <label className={cn("text-sm font-semibold flex items-center gap-2", showErrors && !selectedCity ? "text-destructive" : "text-foreground")}>
+          {selectedCity ? (
             <CheckCircle2 className="h-4 w-4 text-success" />
           ) : (
-            <div className={cn("flex h-5 w-5 items-center justify-center rounded-full text-[11px] font-bold", showErrors && !selectedZone ? "bg-destructive/20 text-destructive" : "bg-primary/20 text-primary")}>1</div>
+            <div className={cn("flex h-5 w-5 items-center justify-center rounded-full text-[11px] font-bold", showErrors && !selectedCity ? "bg-destructive/20 text-destructive" : "bg-primary/20 text-primary")}>1</div>
           )}
-          ¿En qué zona te encuentras?
+          ¿En qué ciudad te encuentras?
         </label>
-        <ZoneSelector onSelect={handleZoneSelect} selected={selectedZone} />
-        {showErrors && !selectedZone && (
-          <p className="text-xs font-medium text-destructive mt-1 animate-fade-in">Falta seleccionar la zona de entrega</p>
+        <CitySelector onSelect={handleCitySelect} selected={selectedCity} />
+        {showErrors && !selectedCity && (
+          <p className="text-xs font-medium text-destructive mt-1 animate-fade-in">Falta seleccionar tu ciudad</p>
         )}
+      </div>
+
+      {/* 2. Seleccionar Zona (se activa si hay ciudad seleccionada) */}
+      <div
+        ref={zoneSectionRef}
+        className={cn("transition-all duration-500 scroll-mt-4", selectedCity ? "opacity-100" : "opacity-40 pointer-events-none grayscale-[0.5]")}
+      >
+        <div className={cn("space-y-3 p-3 rounded-xl transition-all", showErrors && selectedCity && !selectedZone && "bg-destructive/5 ring-1 ring-destructive error-highlight")}>
+          <label className={cn("text-sm font-semibold flex items-center gap-2", showErrors && selectedCity && !selectedZone ? "text-destructive" : "text-foreground")}>
+            {selectedZone ? (
+              <CheckCircle2 className="h-4 w-4 text-success" />
+            ) : (
+              <div className={cn("flex h-5 w-5 items-center justify-center rounded-full text-[11px] font-bold", showErrors && selectedCity && !selectedZone ? "bg-destructive/20 text-destructive" : "bg-primary/20 text-primary")}>2</div>
+            )}
+            ¿En qué zona?
+          </label>
+          {selectedCity && <ZoneSelector cityId={selectedCity} onSelect={handleZoneSelect} selected={selectedZone} />}
+          {showErrors && selectedCity && !selectedZone && (
+            <p className="text-xs font-medium text-destructive mt-1 animate-fade-in">Falta seleccionar la zona de entrega</p>
+          )}
+        </div>
       </div>
 
       <div
@@ -91,7 +121,7 @@ export function LocalDelivery({ onComplete }: LocalDeliveryProps) {
             {location ? (
               <CheckCircle2 className="h-4 w-4 text-success" />
             ) : (
-              <div className={cn("flex h-5 w-5 items-center justify-center rounded-full text-[11px] font-bold", showErrors && selectedZone && !location ? "bg-destructive/20 text-destructive" : "bg-primary/20 text-primary")}>2</div>
+              <div className={cn("flex h-5 w-5 items-center justify-center rounded-full text-[11px] font-bold", showErrors && selectedZone && !location ? "bg-destructive/20 text-destructive" : "bg-primary/20 text-primary")}>3</div>
             )}
             Confirma tu ubicación exacta
           </label>
@@ -110,7 +140,9 @@ export function LocalDelivery({ onComplete }: LocalDeliveryProps) {
               <div>
                 <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">Dirección de entrega</p>
                 <p className="text-sm font-medium text-foreground mt-0.5 leading-snug">{location.address}</p>
-                <p className="text-xs text-muted-foreground mt-1">{selectedZone}</p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  {STORE_CONFIG.delivery.cities.find(c => c.id === selectedCity)?.name} — {STORE_CONFIG.delivery.cities.find(c => c.id === selectedCity)?.zones.find(z => z.id === selectedZone)?.name}
+                </p>
               </div>
             </div>
             
