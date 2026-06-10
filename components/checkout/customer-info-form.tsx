@@ -41,7 +41,7 @@ function getFieldStatus(field: string, value: string, touched: boolean): 'idle' 
       return 'valid'
     }
     case 'email':
-      if (!value) return 'idle' // optional
+      if (!value) return 'error'
       if (!/^\S+@\S+\.\S+$/.test(value)) return touched ? 'error' : 'idle'
       return 'valid'
     default:
@@ -68,6 +68,7 @@ function getFieldError(field: string, value: string): string {
       return ''
     }
     case 'email':
+      if (!value) return 'El correo es requerido'
       if (value && !/^\S+@\S+\.\S+$/.test(value)) return 'Formato inválido (ej: nombre@gmail.com)'
       return ''
     default:
@@ -167,7 +168,7 @@ export function CustomerInfoForm({ onComplete, initialData }: CustomerInfoFormPr
       nameStatus === 'valid' &&
       idStatus === 'valid' &&
       phoneStatus === 'valid' &&
-      (emailStatus === 'valid' || emailStatus === 'idle')
+      emailStatus === 'valid'
 
     if (isValid) {
       onComplete(formData)
@@ -341,7 +342,7 @@ export function CustomerInfoForm({ onComplete, initialData }: CustomerInfoFormPr
               onChange={(e) => handleChange('email', e.target.value)}
               onBlur={() => handleBlur('email')}
             />
-            <label>Correo electrónico (Opcional)</label>
+            <label>Correo electrónico</label>
             {emailStatus === 'valid' && (
               <CheckCircle2 className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-emerald-500 field-success-icon pointer-events-none" />
             )}
