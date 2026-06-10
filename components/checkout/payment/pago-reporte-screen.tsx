@@ -47,20 +47,20 @@ export function PagoReporteScreen({ methodId, onSubmit }: PagoReporteScreenProps
             <div 
               onClick={() => !capture && fileInputRef.current?.click()}
               className={cn(
-                "border-2 border-dashed rounded-xl p-4 transition-all flex flex-col items-center justify-center text-center gap-2",
+                "w-full border-2 border-dashed rounded-xl p-4 transition-all flex flex-col items-center justify-center text-center gap-2 overflow-hidden",
                 capture 
                   ? "border-primary/30 bg-primary/5" 
                   : "border-border hover:border-primary/50 hover:bg-muted cursor-pointer"
               )}
             >
               {capture ? (
-                <div className="flex items-center justify-between w-full">
+                <div className="flex items-center justify-between w-full overflow-hidden gap-2">
                   <div className="flex items-center gap-3 min-w-0 flex-1">
                     <div className="h-10 w-10 rounded-lg bg-primary/10 text-primary flex items-center justify-center shrink-0">
                       <ImageIcon className="h-5 w-5" />
                     </div>
-                    <div className="text-left min-w-0 flex-1 pr-2">
-                      <span className="text-sm font-bold text-foreground truncate block" title={capture.name}>{capture.name}</span>
+                    <div className="text-left min-w-0 flex-1">
+                      <span className="text-sm font-bold text-foreground truncate block w-full" title={capture.name}>{capture.name}</span>
                       <span className="text-xs text-muted-foreground">{(capture.size / 1024).toFixed(0)} KB</span>
                     </div>
                   </div>
