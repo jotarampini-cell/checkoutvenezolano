@@ -2,12 +2,94 @@
 
 import { useState, useEffect } from 'react'
 import { CustomerInfo } from '@/lib/mock-profiles'
-import { User, CreditCard, Phone, Mail } from 'lucide-react'
+import { User, CreditCard, Phone, Mail, CheckCircle2, AlertCircle } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 interface CustomerInfoFormProps {
   onComplete: (data: CustomerInfo) => void
   initialData?: CustomerInfo | null
+}
+
+type TouchedFields = Record<string, boolean>
+
+function getFieldStatus(field: string, value: string, touched: boolean): 'idle' | 'valid' | 'error' {
+  if (!touched && !value) return 'idle'
+  switch (field) {
+    case 'name':
+      if (!value.trim()) return 'error'
+      if (value.trim().length < 3) return 'error'
+      return 'valid'
+    case 'idNumber': {
+      const raw = value.replace(/\D/g, '')
+      if (!raw) return 'error'
+      if (raw.length < 6) return 'error'
+      return 'valid'
+    }
+    case 'phone': {
+      const raw = value.replace(/\D/g, '')
+      if (!raw) return 'error'
+      if (raw.length < 11) return touched ? 'error' : 'idle'
+      return 'valid'
+    }
+    case 'email':
+      if (!value) return 'idle' // optional
+      if (!/^\S+@\S+\.\S+$/.test(value)) return touched ? 'error' : 'idle'
+      return 'valid'
+    default:
+      return 'idle'
+  }
+}
+
+function getFieldError(field: string, value: string): string {
+  switch (field) {
+    case 'name':
+      if (!value.trim()) return 'El nombre es requerido'
+      if (value.trim().length < 3) return 'Nombre muy corto'
+      return ''
+    case 'idNumber': {
+      const raw = value.replace(/\D/g, '')
+      if (!raw) return 'La cédula es requerida'
+      if (raw.length < 6) return 'Cédula muy corta'
+      return ''
+    }
+    case 'phone': {
+      const raw = value.replace(/\D/g, '')
+      if (!raw) return 'El teléfono es requerido'
+      if (raw.length < 11) return 'Debe tener 11 dígitos (ej: 0414-1234567)'
+      return ''
+    }
+    case 'email':
+      if (value && !/^\S+@\S+\.\S+$/.test(value)) return 'Formato inválido (ej: nombre@gmail.com)'
+      return ''
+    default:
+      return ''
+  }
+}
+
+interface FieldWrapperProps {
+  status: 'idle' | 'valid' | 'error'
+  error: string
+  children: React.ReactNode
+}
+
+function FieldFeedback({ status, error }: { status: 'idle' | 'valid' | 'error'; error: string }) {
+  if (status === 'valid') {
+    return (
+      <p className="flex items-center gap-1 text-xs text-emerald-600 dark:text-emerald-400 px-1 mt-1 animate-fade-in">
+        <CheckCircle2 className="h-3.5 w-3.5 field-success-icon shrink-0" />
+        Correcto
+      </p>
+    )
+  }
+  if (status === 'error' && error) {
+    return (
+      <p className="flex items-center gap-1 text-xs text-destructive px-1 mt-1 animate-fade-in">
+        <AlertCircle className="h-3.5 w-3.5 shrink-0" />
+        {error}
+      </p>
+    )
+  }
+  return null
 }
 
 export function CustomerInfoForm({ onComplete, initialData }: CustomerInfoFormProps) {
@@ -18,59 +100,46 @@ export function CustomerInfoForm({ onComplete, initialData }: CustomerInfoFormPr
     phone: '',
     email: '',
   })
-  const [errors, setErrors] = useState<Record<string, string>>({})
+  const [touched, setTouched] = useState<TouchedFields>({})
 
   useEffect(() => {
     if (initialData) {
       setFormData(initialData)
+      // pre-mark all filled fields as touched so they show green immediately
+      const t: TouchedFields = {}
+      Object.entries(initialData).forEach(([k, v]) => { if (v) t[k] = true })
+      setTouched(t)
     }
   }, [initialData])
 
-  const validateField = (field: keyof CustomerInfo, value: string) => {
-    let error = ''
-    switch (field) {
-      case 'name':
-        if (!value.trim()) error = 'El nombre es requerido'
-        break
-      case 'idNumber': {
-        const rawId = value.replace(/\D/g, '')
-        if (!rawId) error = 'La cédula es requerida'
-        else if (rawId.length < 6) error = 'Cédula muy corta'
-        break
-      }
-      case 'phone': {
-        const rawPhone = value.replace(/\D/g, '')
-        if (!rawPhone) error = 'El teléfono es requerido'
-        else if (rawPhone.length < 11) error = 'Debe tener 11 dígitos'
-        break
-      }
-      case 'email':
-        if (value && !/^\S+@\S+\.\S+$/.test(value)) error = 'Email inválido'
-        break
-    }
-    setErrors(prev => ({ ...prev, [field]: error }))
-    return !error
-  }
-
-  const handleBlur = (field: keyof CustomerInfo) => {
-    validateField(field, formData[field] || '')
-  }
-
   const handleChange = (field: keyof CustomerInfo, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }))
-    // Clear error when user types
-    if (errors[field]) {
-      setErrors(prev => ({ ...prev, [field]: '' }))
+    // Mark as touched on first keystroke (for real-time feedback)
+    if (!touched[field]) {
+      setTouched(prev => ({ ...prev, [field]: true }))
     }
   }
 
-  const handleSubmit = () => {
-    const isNameValid = validateField('name', formData.name)
-    const isIdValid = validateField('idNumber', formData.idNumber)
-    const isPhoneValid = validateField('phone', formData.phone)
-    const isEmailValid = validateField('email', formData.email || '')
+  const handleBlur = (field: string) => {
+    setTouched(prev => ({ ...prev, [field]: true }))
+  }
 
-    if (isNameValid && isIdValid && isPhoneValid && isEmailValid) {
+  const nameStatus = getFieldStatus('name', formData.name, !!touched.name)
+  const idStatus = getFieldStatus('idNumber', formData.idNumber, !!touched.idNumber)
+  const phoneStatus = getFieldStatus('phone', formData.phone, !!touched.phone)
+  const emailStatus = getFieldStatus('email', formData.email || '', !!touched.email)
+
+  const handleSubmit = () => {
+    // Touch all fields to reveal errors
+    setTouched({ name: true, idNumber: true, phone: true, email: true })
+
+    const isValid =
+      nameStatus === 'valid' &&
+      idStatus === 'valid' &&
+      phoneStatus === 'valid' &&
+      (emailStatus === 'valid' || emailStatus === 'idle')
+
+    if (isValid) {
       onComplete(formData)
     }
   }
@@ -82,28 +151,40 @@ export function CustomerInfoForm({ onComplete, initialData }: CustomerInfoFormPr
           <User className="h-5 w-5 text-primary" />
           Tus datos personales
         </h3>
-        
+
         {/* Nombre Completo */}
-        <div className="space-y-1">
-          <div className="floating-label-group">
+        <div className="space-y-0.5">
+          <div className="floating-label-group relative">
             <input
               type="text"
               placeholder=" "
-              className={cn("input-premium", formData.name && "has-value", errors.name && "error")}
+              className={cn(
+                'input-premium pr-10',
+                formData.name && 'has-value',
+                nameStatus === 'error' && touched.name && 'error',
+                nameStatus === 'valid' && 'success'
+              )}
               value={formData.name}
               onChange={(e) => handleChange('name', e.target.value)}
               onBlur={() => handleBlur('name')}
             />
             <label>Nombre y Apellido</label>
+            {/* Inline status icon */}
+            {nameStatus === 'valid' && (
+              <CheckCircle2 className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-emerald-500 field-success-icon pointer-events-none" />
+            )}
+            {nameStatus === 'error' && touched.name && (
+              <AlertCircle className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-destructive pointer-events-none animate-fade-in" />
+            )}
           </div>
-          {errors.name && <p className="text-xs text-destructive px-1">{errors.name}</p>}
+          <FieldFeedback status={touched.name ? nameStatus : 'idle'} error={getFieldError('name', formData.name)} />
         </div>
 
         {/* Cédula */}
-        <div className="space-y-1">
+        <div className="space-y-0.5">
           <div className="flex gap-2">
             <div className="w-24 shrink-0">
-              <select 
+              <select
                 className="select-premium font-semibold"
                 value={formData.idType}
                 onChange={(e) => handleChange('idType', e.target.value)}
@@ -113,12 +194,17 @@ export function CustomerInfoForm({ onComplete, initialData }: CustomerInfoFormPr
                 <option value="J">J</option>
               </select>
             </div>
-            <div className="flex-1 floating-label-group">
+            <div className="flex-1 floating-label-group relative">
               <input
                 type="text"
                 inputMode="numeric"
                 placeholder=" "
-                className={cn("input-premium", formData.idNumber && "has-value", errors.idNumber && "error")}
+                className={cn(
+                  'input-premium pr-10',
+                  formData.idNumber && 'has-value',
+                  idStatus === 'error' && touched.idNumber && 'error',
+                  idStatus === 'valid' && 'success'
+                )}
                 value={formData.idNumber}
                 onChange={(e) => {
                   const val = e.target.value.replace(/\D/g, '')
@@ -128,19 +214,30 @@ export function CustomerInfoForm({ onComplete, initialData }: CustomerInfoFormPr
                 onBlur={() => handleBlur('idNumber')}
               />
               <label>Cédula o RIF</label>
+              {idStatus === 'valid' && (
+                <CheckCircle2 className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-emerald-500 field-success-icon pointer-events-none" />
+              )}
+              {idStatus === 'error' && touched.idNumber && (
+                <AlertCircle className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-destructive pointer-events-none animate-fade-in" />
+              )}
             </div>
           </div>
-          {errors.idNumber && <p className="text-xs text-destructive px-1">{errors.idNumber}</p>}
+          <FieldFeedback status={touched.idNumber ? idStatus : 'idle'} error={getFieldError('idNumber', formData.idNumber)} />
         </div>
 
         {/* Teléfono */}
-        <div className="space-y-1">
-          <div className="floating-label-group">
+        <div className="space-y-0.5">
+          <div className="floating-label-group relative">
             <input
               type="tel"
               inputMode="tel"
               placeholder=" "
-              className={cn("input-premium", formData.phone && "has-value", errors.phone && "error")}
+              className={cn(
+                'input-premium pr-10',
+                formData.phone && 'has-value',
+                phoneStatus === 'error' && touched.phone && 'error',
+                phoneStatus === 'valid' && 'success'
+              )}
               value={formData.phone}
               onChange={(e) => {
                 const val = e.target.value.replace(/\D/g, '')
@@ -153,25 +250,42 @@ export function CustomerInfoForm({ onComplete, initialData }: CustomerInfoFormPr
               onBlur={() => handleBlur('phone')}
             />
             <label>Teléfono (WhatsApp)</label>
+            {phoneStatus === 'valid' && (
+              <CheckCircle2 className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-emerald-500 field-success-icon pointer-events-none" />
+            )}
+            {phoneStatus === 'error' && touched.phone && (
+              <AlertCircle className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-destructive pointer-events-none animate-fade-in" />
+            )}
           </div>
-          {errors.phone && <p className="text-xs text-destructive px-1">{errors.phone}</p>}
+          <FieldFeedback status={touched.phone ? phoneStatus : 'idle'} error={getFieldError('phone', formData.phone)} />
         </div>
 
         {/* Email */}
-        <div className="space-y-1">
-          <div className="floating-label-group">
+        <div className="space-y-0.5">
+          <div className="floating-label-group relative">
             <input
               type="email"
               inputMode="email"
               placeholder=" "
-              className={cn("input-premium", formData.email && "has-value", errors.email && "error")}
+              className={cn(
+                'input-premium pr-10',
+                formData.email && 'has-value',
+                emailStatus === 'error' && touched.email && 'error',
+                emailStatus === 'valid' && 'success'
+              )}
               value={formData.email || ''}
               onChange={(e) => handleChange('email', e.target.value)}
               onBlur={() => handleBlur('email')}
             />
             <label>Correo electrónico (Opcional)</label>
+            {emailStatus === 'valid' && (
+              <CheckCircle2 className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-emerald-500 field-success-icon pointer-events-none" />
+            )}
+            {emailStatus === 'error' && touched.email && (
+              <AlertCircle className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-destructive pointer-events-none animate-fade-in" />
+            )}
           </div>
-          {errors.email && <p className="text-xs text-destructive px-1">{errors.email}</p>}
+          <FieldFeedback status={touched.email ? emailStatus : 'idle'} error={getFieldError('email', formData.email || '')} />
         </div>
       </div>
 

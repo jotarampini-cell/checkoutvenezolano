@@ -24,6 +24,8 @@ export type Currency = 'USD' | 'VES'
 
 export default function CheckoutPage() {
   const [step, setStep] = useState<Step>('entrega')
+  const [stepDirection, setStepDirection] = useState<'forward' | 'back'>('forward')
+  const [stepKey, setStepKey] = useState(0) // forces re-mount for animation replay
   const [deliveryData, setDeliveryData] = useState<any>(null)
   const [customerInfo, setCustomerInfo] = useState<any>(null)
   const [orderData, setOrderData] = useState<any>(null)
@@ -89,16 +91,23 @@ export default function CheckoutPage() {
     }).format(amountInUsd)
   }, [currency])
 
+  // Step navigation helper
+  const goToStep = useCallback((next: Step, direction: 'forward' | 'back') => {
+    setStepDirection(direction)
+    setStepKey(k => k + 1)
+    setStep(next)
+  }, [])
+
   // Step handlers
   const handleDeliveryComplete = useCallback((data: any) => {
     setDeliveryData(data)
-    setStep('datos')
-  }, [])
+    goToStep('datos', 'forward')
+  }, [goToStep])
 
   const handleCustomerInfoComplete = useCallback((info: any) => {
     setCustomerInfo(info)
-    setStep('pago')
-  }, [])
+    goToStep('pago', 'forward')
+  }, [goToStep])
 
   const handlePaymentComplete = useCallback((paymentData: any) => {
     const confirmNum = 'VE' + Date.now().toString().slice(-8)
@@ -109,10 +118,12 @@ export default function CheckoutPage() {
       ...paymentData,
       confirmationNumber: confirmNum,
     })
-    setStep('confirmacion')
-  }, [deliveryData, customerInfo])
+    goToStep('confirmacion', 'forward')
+  }, [deliveryData, customerInfo, goToStep])
 
   const handleReset = useCallback(() => {
+    setStepDirection('forward')
+    setStepKey(k => k + 1)
     setStep('entrega')
     setDeliveryData(null)
     setCustomerInfo(null)
@@ -121,9 +132,9 @@ export default function CheckoutPage() {
   }, [])
 
   const handleBack = useCallback(() => {
-    if (step === 'datos') setStep('entrega')
-    else if (step === 'pago') setStep('datos')
-  }, [step])
+    if (step === 'datos') goToStep('entrega', 'back')
+    else if (step === 'pago') goToStep('datos', 'back')
+  }, [step, goToStep])
 
   return (
     <div className="min-h-dvh bg-background">
@@ -292,11 +303,15 @@ export default function CheckoutPage() {
               </div>
             )}
 
-            <div className={cn("step-content pb-28 lg:pb-8", cartItems.length === 0 && "opacity-40 pointer-events-none grayscale-[0.5]")}>
+            <div key={stepKey} className={cn(
+              "step-content pb-28 lg:pb-8",
+              stepDirection === 'forward' ? 'step-enter-forward' : 'step-enter-back',
+              cartItems.length === 0 && "opacity-40 pointer-events-none grayscale-[0.5]"
+            )}>
               {step === 'pago' && (
                 <CheckoutPaymentFlow 
                   onComplete={handlePaymentComplete} 
-                  onBack={() => setStep('datos')} 
+                  onBack={() => goToStep('datos', 'back')} 
                   currency={currency}
                 />
               )}
