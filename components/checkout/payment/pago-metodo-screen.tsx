@@ -30,7 +30,7 @@ export function PagoMetodoScreen({ onSelect, selected, currency = 'USD', setCurr
           onClick={() => setCurrency?.('USD')}
           className={cn(
             "flex-1 text-sm font-bold py-2 rounded-lg transition-all",
-            currency === 'USD' ? "bg-background shadow-sm text-foreground" : "text-muted-foreground hover:text-foreground"
+            currency === 'USD' ? "bg-primary text-white shadow-sm" : "text-muted-foreground hover:bg-muted"
           )}
         >
           USD $
@@ -39,7 +39,7 @@ export function PagoMetodoScreen({ onSelect, selected, currency = 'USD', setCurr
           onClick={() => setCurrency?.('VES')}
           className={cn(
             "flex-1 text-sm font-bold py-2 rounded-lg transition-all",
-            currency === 'VES' ? "bg-background shadow-sm text-foreground" : "text-muted-foreground hover:text-foreground"
+            currency === 'VES' ? "bg-primary text-white shadow-sm" : "text-muted-foreground hover:bg-muted"
           )}
         >
           VES

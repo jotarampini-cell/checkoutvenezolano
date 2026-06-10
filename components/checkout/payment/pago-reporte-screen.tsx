@@ -96,19 +96,20 @@ export function PagoReporteScreen({ methodId, onSubmit }: PagoReporteScreenProps
             </div>
           </div>
 
-          <div className="floating-label-group">
+          <div className="space-y-1.5">
+            <label className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider ml-1">Número de Referencia (Opcional)</label>
             <input
               type="text"
               inputMode="numeric"
-              placeholder=" "
+              placeholder="Ej: 123456"
               className={cn("input-premium", ref && "has-value")}
               value={ref}
               onChange={(e) => setRef(e.target.value)}
             />
-            <label>Número de Referencia (Opcional)</label>
           </div>
 
-          <div className="floating-label-group">
+          <div className="space-y-1.5">
+            <label className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider ml-1">Fecha del pago</label>
             <input
               type="date"
               placeholder=" "
@@ -116,18 +117,19 @@ export function PagoReporteScreen({ methodId, onSubmit }: PagoReporteScreenProps
               value={date}
               onChange={(e) => setDate(e.target.value)}
             />
-            <label>Fecha del pago</label>
           </div>
         </div>
       </div>
 
-      <button
-        onClick={() => onSubmit({ ref, date, capture })}
-        disabled={!capture || !date}
-        className="btn-primary"
-      >
-        Confirmar Pago
-      </button>
+      <div className="flex justify-center">
+        <button
+          onClick={() => onSubmit({ ref, date, capture })}
+          disabled={!capture || !date}
+          className="btn-primary w-full sm:w-auto px-10"
+        >
+          Confirmar Pago
+        </button>
+      </div>
     </div>
   )
 }
